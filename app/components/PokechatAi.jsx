@@ -27,7 +27,7 @@ export default function PokechatAi() {
     }
   
     return (
-        <div className="flex flex-col h-100 w-50 text-black border-gray-300 border-2 rounded-md m-4 align-center" >
+        <div className="flex flex-col h-100 w-100 text-black border-gray-300 border-2 rounded-md m-4 align-right" >
             <PokechatHeader />
             <PokechatMessages messages={messages} />
             <PokechatInput input={input} setInput={setInput} sendMessage={sendMessage} handleEnter={handleEnter} />
