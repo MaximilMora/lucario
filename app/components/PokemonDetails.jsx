@@ -65,15 +65,17 @@ export default function PokemonDetails({ pokemonId }) {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Back Button */}
+        {/*Pokemon Button */}
+        <button className='bg-blue-200 rounded-full h-8 w-50 hover:bg-blue-100'>
         <Link 
           href="/" 
           className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8"
         >
           ← Back to Pokemon List
         </Link>
-
+         </button>
         {/* Pokemon Card */}
+        
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Image Section */}
@@ -106,20 +108,56 @@ export default function PokemonDetails({ pokemonId }) {
               {/* Types */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Types</h2>
-              </div>
+                 <div className='text-xl flex gap-2'>{pokemon.types.map((type,index) => (
+                    <div key={index} className="text-blue-800 mr-1  bg-blue-100 px-3 py-1 rounded-full">
+                      {type.type.name}
+                    </div>
+                  ))}
+                  </div>   
+                </div>
 
               {/* Stats */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Base Stats</h2>
+                <div className='text-x1 space-y-3'>{pokemon.stats.map((stat,index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="text-gray-700 w-27 capitalize">{stat.stat.name + ":"}</div>
+                      <div className='flex-1 mx-4'>
+                        <div className='w-full bg-gray-200 rounded-full h-2 mr-1'>
+                          <div className='bg-blue-600 h-2 rounded-full'
+                          style={{ width: `${(stat.base_stat / 255) * 100}%` }}></div>
+                        </div>
+                      </div>
+                      <div className="font-bold text-black text-right mr-1">{stat.base_stat}</div>
+                      <div></div>
+                    </div>
+                  ))}
+                  </div>   
               </div>
 
               {/* Abilities */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Abilities</h2>
+                <div className='text-x1 '>{pokemon.abilities.map((ability,index) => (
+                    <div key={index} className="text-black mr-2 h-8 capitalize">
+                      {ability.ability.name}
+                    </div>
+                  ))}
+                  </div>  
               </div>
 
               {/* Physical Characteristics */}
               <div className="grid grid-cols-2 gap-4">
+              <div className='text-xl'>
+                  <div className="text-black px-3 py-1 w-20 mr-2">
+                    <strong>Height:</strong><br />{pokemon.height / 10}m
+                  </div>
+              </div>   
+              <div className='text-xl'>
+                  <div className="text-black px-3 py-1 mr-2 ">
+                    <strong>Weight:</strong><br /> {pokemon.weight / 10}Kg
+               </div>    
+                </div>  
               </div>
             </div>
           </div>
