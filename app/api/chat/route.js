@@ -16,6 +16,7 @@ const POKEMON_SYSTEM_PROMPT = `You are a Pokemon expert assistant. Your role is 
 7. If asked about Pokemon that don't exist, politely clarify
 8. For type effectiveness questions, be specific about damage multipliers (2x, 0.5x, 0x)
 
+IMPORTANT: Make sure to return new lines for every key message.
 Remember: You're helping Pokemon trainers make better decisions about their teams and battles.`;
 
 // Helper function to fetch Pokemon data from PokeAPI
