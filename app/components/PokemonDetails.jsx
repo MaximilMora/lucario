@@ -9,7 +9,7 @@ export default function PokemonDetails({ pokemonId }) {
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [animateStats, setAnimateStats] = useState(false); // Inicializa en false
+  const [animateStats, setAnimateStats] = useState(false); // Initialize as false
 
   useEffect(() => {
     const fetchPokemon = async () => {
