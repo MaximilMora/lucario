@@ -24,7 +24,7 @@ export default function PokemonDetails({ pokemonId }) {
         const data = await response.json();
         setPokemon(data);
         
-        // Activar animación después de cargar los datos
+        // Activate animation after loading data
         setTimeout(() => {
           setAnimateStats(true);
         }, 300);
