@@ -120,7 +120,7 @@ export default function PokemonDetails({ pokemonId }) {
                 <div className='text-xl space-y-3'>
                   {pokemon.stats.map((stat, index) => (
                     <div key={index} className="flex items-center justify-between">
-                      <div className="text-gray-700 w-27 capitalize">{stat.stat.name + ":"}</div>
+                      <div className="text-gray-700 w-28 capitalize">{stat.stat.name + ":"}</div>
                       <div className='flex-1 mx-4'>
                         <div className='w-full bg-gray-200 rounded-full h-2 mr-1 overflow-hidden'>
                           <div 
