@@ -1,5 +1,6 @@
 import Image from "next/image";
 import PokemonGallery from './PokemonGallery';
+import PokechatAi from "./PokechatAi";
 
 export default function HomePage() {
   return (
@@ -7,6 +8,7 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Pokemon Gallery Browser</h1>
         <PokemonGallery key="pokemon-gallery" />
+        <PokechatAi key="pokechat-ai" />
       </div>
     </div>
   );
