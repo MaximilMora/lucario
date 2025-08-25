@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PokechatHeader from "./PokechatHeader";
 import PokechatMessages from "./PokechatMessages";
 import PokechatInput from "./PokechatInput";
@@ -8,7 +8,15 @@ export default function PokechatAi() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
-    const [isMinimized, setIsMinimized] = useState(false); 
+    const [isMinimized, setIsMinimized] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setMessages(prev => prev.filter(msg => !msg.isError));
+        }, 5000);
+
+        return () => clearTimeout(timer);
+    }, [messages.filter(msg => msg.isError).length]); 
 
     if (isMinimized) {
         return <div className="fixed bottom-0 right-0 w-80 h-20 max-w-sm bg-white text-black border-gray-300 border-2 shadow-xl z-50 flex flex-col">
@@ -16,6 +24,21 @@ export default function PokechatAi() {
         </div>
     }
    const sendMessage = async () => {
+    if (!input.trim()) {
+      console.log("Input vacío, no se envía mensaje");
+      
+      setMessages(prev => [
+        ...prev,
+        { 
+          sender: 'bot', 
+          content: 'Por favor, escribe un mensaje antes de enviar.', 
+          timestamp: new Date(),
+          isError: true
+        }
+      ]);
+      return;
+    }
+    
     setLoading(true);
     console.log("sendMessage----");
     try {
@@ -56,6 +79,17 @@ export default function PokechatAi() {
       
     } catch (error) {
       console.error('Network error:', error);
+      // Mostrar mensaje de error al usuario
+      setMessages(prev => [
+        ...prev,
+        { sender: 'user', content: input, timestamp: new Date() },
+        { 
+          sender: 'bot', 
+          content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, verifica que la API esté configurada correctamente.', 
+          timestamp: new Date()
+        }
+      ]);
+      setInput("");
     } finally {
       setLoading(false);
     }
