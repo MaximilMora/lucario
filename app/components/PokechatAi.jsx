@@ -25,13 +25,13 @@ export default function PokechatAi() {
     }
    const sendMessage = async () => {
     if (!input.trim()) {
-      console.log("Input vacío, no se envía mensaje");
+      console.log("Input empty, message not sent");
       
       setMessages(prev => [
         ...prev,
         { 
           sender: 'bot', 
-          content: 'Por favor, escribe un mensaje antes de enviar.', 
+          content: 'Please write a message before sending.', 
           timestamp: new Date(),
           isError: true
         }
@@ -85,7 +85,7 @@ export default function PokechatAi() {
         { sender: 'user', content: input, timestamp: new Date() },
         { 
           sender: 'bot', 
-          content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, verifica que la API esté configurada correctamente.', 
+          content: 'Sorry, there was an error processing your message. Please check that the API is configured correctly.', 
           timestamp: new Date()
         }
       ]);
