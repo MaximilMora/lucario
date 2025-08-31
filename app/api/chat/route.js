@@ -2,7 +2,11 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
 // Initialize Google GenAI client
-const ai = new GoogleGenAI({});
+const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
+if (!GOOGLE_GENAI_API_KEY) {
+  throw new Error("Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.");
+}
+const ai = new GoogleGenAI({ apiKey: GOOGLE_GENAI_API_KEY });
 
 // Pokemon-specific system prompt to guide Gemini's responses
 const POKEMON_SYSTEM_PROMPT = `You are a Pokemon expert assistant. Your role is to provide helpful, accurate information about Pokemon. Follow these guidelines:
