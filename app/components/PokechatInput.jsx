@@ -22,6 +22,8 @@ export default function PokechatInput({ input, setInput, sendMessage, handleEnte
                 }`}
                 disabled={!input.trim() || loading}
                 title={!input.trim() ? "Write a message to send" : "Send message"}
+
+                title={!input.trim() ? "Escribe un mensaje para enviar" : "Enviar mensaje"}
             >
                 {loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : "Send"}
             </button>

@@ -107,6 +107,8 @@ export default function PokemonDetails({ pokemonId }) {
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Types</h2>
                  <div className='text-x1 flex gap-2'>{pokemon.types.map((type,index) => (
+
+                 <div className='text-xl flex gap-2'>{pokemon.types.map((type,index) => (
                     <div key={index} className="text-blue-800 mr-1  bg-blue-100 px-3 py-1 rounded-full">
                       {type.type.name}
                     </div>
