@@ -12,18 +12,23 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
                 Sign In
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+              <button className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
                 Sign Up
               </button>
             </SignUpButton>
           </SignedOut>
           <SignedIn>
-            <UserButton />
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                ¡Hola, entrenador!
+              </span>
+              <UserButton />
+            </div>
           </SignedIn>
         </div>
       </header>
@@ -44,23 +49,14 @@ export default function HomePage() {
                 Sign in to explore Pokemon and chat with our AI assistant
               </p>
               <SignInButton mode="modal">
-                <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 text-lg">
+                <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 text-lg transition-colors">
                   Get Started
                 </button>
               </SignInButton>
             </div>
           </SignedOut>
         </div>
-
-export default function HomePage() {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Pokemon Gallery Browser</h1>
-        <PokemonGallery key="pokemon-gallery" />
-        <PokechatAi key="pokechat-ai" />
-
       </div>
     </div>
   );
-} 
+}
