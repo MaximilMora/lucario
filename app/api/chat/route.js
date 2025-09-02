@@ -113,7 +113,7 @@ export async function POST(request) {
     
     if (error.message.includes('API key')) {
       return NextResponse.json(
-        { error: 'API key not configured. Please set GEMINI_API_KEY environment variable.' },
+        { error: 'API key not configured. Please set GOOGLE_GENAI_API_KEY environment variable.' },
         { status: 500 }
       );
     }
