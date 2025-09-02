@@ -11,6 +11,8 @@ export default function PokechatHeader({ isMinimized, setIsMinimized }) {
                         <p className="text-xs text-blue-100">Tu asistente Pokémon</p>
                     </div>
                 </div>            
+
+        <div className="flex justify-between items-center p-4 w-full">
             <button 
                 onClick={() => setIsMinimized(!isMinimized)} 
                 className="flex justify-center text-xl font-bold p-2 w-full hover:bg-gray-100 rounded"
@@ -19,5 +21,6 @@ export default function PokechatHeader({ isMinimized, setIsMinimized }) {
             </button>
         </div>
         </div>
+
     )
 }
