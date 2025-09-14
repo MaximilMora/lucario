@@ -76,12 +76,9 @@ export async function POST(request) {
     conversationContext += `\nUser: ${message}\n\nPlease provide a helpful response about Pokemon.`;
 
     // Generate response using Gemini
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: conversationContext,
-    });
-
-    const aiResponse = response.text;
+    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(conversationContext);
+    const aiResponse = result.response.text();
 
     // Extract Pokemon names from the response to potentially fetch additional data
     const pokemonNamePattern = /\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b/g;
