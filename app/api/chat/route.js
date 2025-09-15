@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 // Initialize Google GenAI client
@@ -7,7 +7,7 @@ const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
 if (!GOOGLE_GENAI_API_KEY) {
   throw new Error("Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.");
 }
-const ai = new GoogleGenAI({ apiKey: GOOGLE_GENAI_API_KEY });
+const ai = new GoogleGenerativeAI(GOOGLE_GENAI_API_KEY);
 
 
 // Pokemon-specific system prompt to guide Gemini's responses
@@ -53,6 +53,8 @@ async function fetchTypeData(typeName) {
   }
 }
 
+export const maxDuration = 30; // 30 seconds maximum
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -78,6 +80,11 @@ export async function POST(request) {
     // Generate response using Gemini
     const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(conversationContext);
+    
+    if (!result || !result.response) {
+      throw new Error('No response from Gemini API');
+    }
+    
     const aiResponse = result.response.text();
 
     // Extract Pokemon names from the response to potentially fetch additional data
@@ -110,10 +117,24 @@ export async function POST(request) {
   } catch (error) {
     console.error('Chat API Error:', error);
     
+    // Log más detallado para debugging
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     if (error.message.includes('API key')) {
       return NextResponse.json(
         { error: 'API key not configured. Please set GOOGLE_GENAI_API_KEY environment variable.' },
         { status: 500 }
+      );
+    }
+
+    if (error.message.includes('quota') || error.message.includes('limit')) {
+      return NextResponse.json(
+        { error: 'API quota exceeded. Please try again later.' },
+        { status: 429 }
       );
     }
 
