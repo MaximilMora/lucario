@@ -12,6 +12,16 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+*.png
+*.jpg
+*.jpeg
+/playwright/.cache/
+/.nyc_output
+
+# prettier
+.prettierignore
 
 # next.js
 /.next/
