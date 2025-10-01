@@ -1,6 +1,6 @@
-import Image from "next/image";
+import Image from 'next/image';
 import PokemonGallery from './PokemonGallery';
-import PokechatAi from "./PokechatAi";
+import PokechatAi from './PokechatAi';
 
 export default function HomePage() {
   return (
@@ -12,4 +12,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-} 
+}

@@ -16,14 +16,14 @@ export default function PokemonDetails({ pokemonId }) {
       try {
         setLoading(true);
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
-        
+
         if (!response.ok) {
           throw new Error('Pokemon not found');
         }
-        
+
         const data = await response.json();
         setPokemon(data);
-        
+
         // Activate animation after loading data
         setTimeout(() => {
           setAnimateStats(true);
@@ -35,16 +35,13 @@ export default function PokemonDetails({ pokemonId }) {
       }
     };
 
-   
-
     if (pokemonId) {
       fetchPokemon();
     }
   }, [pokemonId]);
 
   if (loading) {
-   return <PokemonDetailsSkeleton />
-    
+    return <PokemonDetailsSkeleton />;
   }
 
   if (error) {
@@ -61,19 +58,15 @@ export default function PokemonDetails({ pokemonId }) {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
-        <Link 
-          href="/" 
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8"
-        >
+        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8">
           ← Back to Pokemon List
         </Link>
         {/* Pokemon Card */}
-        
+
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Image Section */}
@@ -85,17 +78,15 @@ export default function PokemonDetails({ pokemonId }) {
                   width={256}
                   height={256}
                   className="w-64 h-64"
-                  onError={(e) => {
+                  onError={e => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
                   }}
                 />
               </div>
-              
-              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">
-                {pokemon.name}
-              </h1>
-              
+
+              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">{pokemon.name}</h1>
+
               <p className="text-xl text-gray-600 mb-4">
                 #{pokemon.id.toString().padStart(3, '0')}
               </p>
@@ -106,31 +97,35 @@ export default function PokemonDetails({ pokemonId }) {
               {/* Types */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Types</h2>
-                 <div className='text-xl flex gap-2'>{pokemon.types.map((type,index) => (
-                    <div key={index} className="text-blue-800 mr-1  bg-blue-100 px-3 py-1 rounded-full">
+                <div className="text-xl flex gap-2">
+                  {pokemon.types.map((type, index) => (
+                    <div
+                      key={index}
+                      className="text-blue-800 mr-1  bg-blue-100 px-3 py-1 rounded-full"
+                    >
                       {type.type.name}
                     </div>
                   ))}
-                  </div>   
                 </div>
+              </div>
 
               {/* Stats */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Base Stats</h2>
-                <div className='text-xl space-y-3'>
+                <div className="text-xl space-y-3">
                   {pokemon.stats.map((stat, index) => (
                     <div key={index} className="flex items-center justify-between">
-                      <div className="text-gray-700 w-28 capitalize">{stat.stat.name + ":"}</div>
-                      <div className='flex-1 mx-4'>
-                        <div className='w-full bg-gray-200 rounded-full h-2 mr-1 overflow-hidden'>
-                          <div 
-                            className='bg-blue-600 h-2 rounded-full'
-                            style={{ 
+                      <div className="text-gray-700 w-28 capitalize">{stat.stat.name + ':'}</div>
+                      <div className="flex-1 mx-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2 mr-1 overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{
                               width: animateStats ? `${(stat.base_stat / 255) * 100}%` : '0%',
                               transitionProperty: 'width',
                               transitionDuration: '0.3s',
                               transitionTimingFunction: 'linear',
-                              transitionDelay: `${index * 100}ms`
+                              transitionDelay: `${index * 100}ms`,
                             }}
                           ></div>
                         </div>
@@ -138,32 +133,36 @@ export default function PokemonDetails({ pokemonId }) {
                       <div className="font-bold text-black text-right mr-1">{stat.base_stat}</div>
                     </div>
                   ))}
-                </div>   
+                </div>
               </div>
 
               {/* Abilities */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Abilities</h2>
-                <div className='text-xl '>{pokemon.abilities.map((ability,index) => (
+                <div className="text-xl ">
+                  {pokemon.abilities.map((ability, index) => (
                     <div key={index} className="text-black mr-2 h-8 capitalize">
                       {ability.ability.name}
                     </div>
                   ))}
-                  </div>  
+                </div>
               </div>
 
               {/* Physical Characteristics */}
               <div className="grid grid-cols-2 gap-4">
-              <div className='text-xl'>
+                <div className="text-xl">
                   <div className="text-black py-1 w-20 mr-2">
-                    <strong>Height:</strong><br />{pokemon.height / 10}m
+                    <strong>Height:</strong>
+                    <br />
+                    {pokemon.height / 10}m
                   </div>
-              </div>   
-              <div className='text-xl'>
+                </div>
+                <div className="text-xl">
                   <div className="text-black py-1 mr-2 ">
-                    <strong>Weight:</strong><br /> {pokemon.weight / 10}Kg
-               </div>    
-                </div>  
+                    <strong>Weight:</strong>
+                    <br /> {pokemon.weight / 10}Kg
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -171,4 +170,4 @@ export default function PokemonDetails({ pokemonId }) {
       </div>
     </div>
   );
-} 
+}

@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { NextResponse } from "next/server";
+import { GoogleGenAI } from '@google/genai';
+import { NextResponse } from 'next/server';
 
 // Initialize Google GenAI client
 const ai = new GoogleGenAI({});
@@ -53,25 +53,22 @@ export async function POST(request) {
     const { message, conversationHistory = [] } = body;
 
     if (!message) {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
     // Build conversation context
-    let conversationContext = POKEMON_SYSTEM_PROMPT + "\n\nPrevious conversation:\n";
-    
+    let conversationContext = POKEMON_SYSTEM_PROMPT + '\n\nPrevious conversation:\n';
+
     // Add conversation history
     conversationHistory.forEach((msg, index) => {
       conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
     });
-    
+
     conversationContext += `\nUser: ${message}\n\nPlease provide a helpful response about Pokemon.`;
 
     // Generate response using Gemini
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: 'gemini-2.5-flash',
       contents: conversationContext,
     });
 
@@ -80,7 +77,7 @@ export async function POST(request) {
     // Extract Pokemon names from the response to potentially fetch additional data
     const pokemonNamePattern = /\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b/g;
     const potentialPokemonNames = aiResponse.match(pokemonNamePattern) || [];
-    
+
     // Try to fetch data for mentioned Pokemon (limit to first 3 to avoid too many API calls)
     const pokemonData = {};
     for (let i = 0; i < Math.min(potentialPokemonNames.length, 3); i++) {
@@ -92,7 +89,7 @@ export async function POST(request) {
             id: data.id,
             name: data.name,
             types: data.types.map(t => t.type.name),
-            sprite: data.sprites.front_default
+            sprite: data.sprites.front_default,
           };
         }
       }
@@ -101,12 +98,11 @@ export async function POST(request) {
     return NextResponse.json({
       response: aiResponse,
       pokemonData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Chat API Error:', error);
-    
+
     if (error.message.includes('API key')) {
       return NextResponse.json(
         { error: 'API key not configured. Please set GEMINI_API_KEY environment variable.' },

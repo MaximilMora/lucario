@@ -7,6 +7,7 @@ The chat API endpoint is now ready at `/api/chat`. Here's how to integrate it:
 **Endpoint:** `POST /api/chat`
 
 **Request Body:**
+
 ```javascript
 {
   message: "What beats Charizard?",           // Required: User's question
@@ -18,6 +19,7 @@ The chat API endpoint is now ready at `/api/chat`. Here's how to integrate it:
 ```
 
 **Response Format:**
+
 ```javascript
 {
   response: "AI response with Pokemon advice...",
@@ -40,9 +42,9 @@ The chat API endpoint is now ready at `/api/chat`. Here's how to integrate it:
 const [messages, setMessages] = useState([]);
 const [loading, setLoading] = useState(false);
 
-const sendMessage = async (userMessage) => {
+const sendMessage = async userMessage => {
   setLoading(true);
-  
+
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -51,13 +53,13 @@ const sendMessage = async (userMessage) => {
         message: userMessage,
         conversationHistory: messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        }))
-      })
+          content: msg.content,
+        })),
+      }),
     });
 
     const data = await response.json();
-    
+
     if (data.error) {
       console.error('API Error:', data.error);
       return;
@@ -67,14 +69,13 @@ const sendMessage = async (userMessage) => {
     setMessages(prev => [
       ...prev,
       { sender: 'user', content: userMessage, timestamp: new Date() },
-      { 
-        sender: 'bot', 
-        content: data.response, 
+      {
+        sender: 'bot',
+        content: data.response,
         pokemonData: data.pokemonData,
-        timestamp: new Date(data.timestamp)
-      }
+        timestamp: new Date(data.timestamp),
+      },
     ]);
-    
   } catch (error) {
     console.error('Network error:', error);
   } finally {
@@ -86,6 +87,7 @@ const sendMessage = async (userMessage) => {
 ## Environment Setup
 
 For production, set environment variable in the .env file:
+
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
@@ -95,14 +97,17 @@ GEMINI_API_KEY=your_gemini_api_key_here
 The API automatically detects Pokemon mentioned in responses and fetches their data. Use `pokemonData` to display Pokemon images:
 
 ```jsx
-{message.pokemonData && Object.values(message.pokemonData).map(pokemon => (
-  <img 
-    key={pokemon.id}
-    src={pokemon.sprite} 
-    alt={pokemon.name}
-    className="w-16 h-16 inline-block"
-  />
-))}
+{
+  message.pokemonData &&
+    Object.values(message.pokemonData).map(pokemon => (
+      <img
+        key={pokemon.id}
+        src={pokemon.sprite}
+        alt={pokemon.name}
+        className="w-16 h-16 inline-block"
+      />
+    ));
+}
 ```
 
 ## Error Handling
