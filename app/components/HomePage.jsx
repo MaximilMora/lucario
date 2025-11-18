@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from 'next/image';
 import PokemonGallery from './PokemonGallery';
 import PokechatAi from "./PokechatAi";
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';

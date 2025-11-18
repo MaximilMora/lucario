@@ -7,9 +7,11 @@ This file contains context about the Pokemon Pokedex Chat Assistant project to h
 **Pokemon Pokedex Chat Assistant** - An interactive Pokemon knowledge assistant that evolves from a simple search interface to an intelligent conversational tool.
 
 ### Target Users
+
 Pokemon trainers (casual and competitive) who want quick, intelligent answers about Pokemon data, battle strategies, and team building advice.
 
 ### Tech Stack
+
 - **Frontend**: React with Next.js, TypeScript, Tailwind CSS
 - **Backend**: Next.js API routes, OpenAI API integration
 - **Data Sources**: PokeAPI for Pokemon data
@@ -40,24 +42,28 @@ pokemon-pokedex-assistant/
 ## 🎯 Development Phases
 
 ### Phase 1: Foundation (CURRENT)
+
 - ✅ Pokemon Gallery Browser - Grid of first 20 Pokemon
 - 🔄 Pokemon Detail View - Individual Pokemon stats and info
 - ⏳ Pokemon Search & Filtering
 - ⏳ Type Chart & Weakness Display
 
 ### Phase 2: AI Integration (PLANNED)
+
 - Natural Language Query Interface
 - Battle Matchup Questions
 - Pokemon Information Queries
 - Conversational Context Memory
 
 ### Phase 3: Advanced Features (PLANNED)
+
 - AI Team Composition Suggestions
 - Battle Strategy Recommendations
 - Opponent Team Analysis
 - Optimized Moveset Recommendations
 
 ### Phase 4: Personalization (PLANNED)
+
 - User Profile & Favorite Pokemon System
 - Personalized Recommendations
 - Conversation History & Search
@@ -66,6 +72,7 @@ pokemon-pokedex-assistant/
 ## 🔌 API Endpoints
 
 ### PokeAPI Integration
+
 ```javascript
 // Get Pokemon list (first 20)
 GET https://pokeapi.co/api/v2/pokemon?limit=20
@@ -78,6 +85,7 @@ https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.pn
 ```
 
 ### Internal API Routes
+
 ```javascript
 // AI Chat endpoint
 POST /api/chat
@@ -90,6 +98,7 @@ POST /api/chat
 ## 📊 Key Data Structures
 
 ### Pokemon Basic Info (from list endpoint)
+
 ```javascript
 {
   name: "bulbasaur",
@@ -98,6 +107,7 @@ POST /api/chat
 ```
 
 ### Pokemon Detailed Info (from individual endpoint)
+
 ```javascript
 {
   id: 1,
@@ -124,34 +134,47 @@ POST /api/chat
 ## 🎨 Design Guidelines
 
 ### Pokemon Cards
+
 - 200px width, auto height
 - 16px gap between cards
 - 12px border radius
 - Hover effect: scale(1.02)
 
 ### Responsive Breakpoints
+
 - Desktop (1024px+): 4 columns
 - Tablet (768px-1023px): 3 columns
 - Mobile (480px-767px): 2 columns
 - Small mobile (<480px): 1 column
 
 ### Pokemon Type Colors
+
 ```css
-.type-grass { background: #78C850; }
-.type-fire { background: #F08030; }
-.type-water { background: #6890F0; }
-.type-electric { background: #F8D030; }
+.type-grass {
+  background: #78c850;
+}
+.type-fire {
+  background: #f08030;
+}
+.type-water {
+  background: #6890f0;
+}
+.type-electric {
+  background: #f8d030;
+}
 /* Add more as needed */
 ```
 
 ## 🧪 Testing Scenarios
 
 ### Critical User Flows
+
 1. **Browse Pokemon**: Load gallery → View Pokemon cards → Click for details
 2. **Pokemon Details**: Navigate to detail page → View stats → Return to gallery
 3. **AI Chat**: Ask question → Receive response → Follow-up questions
 
 ### Common Queries for AI Testing
+
 - "What beats Charizard?"
 - "Tell me about Pikachu"
 - "What are electric type weaknesses?"
@@ -160,12 +183,14 @@ POST /api/chat
 ## 🚀 Getting Started for New Contributors
 
 1. **Environment Setup**:
+
    ```bash
    npm install
    npm run dev
    ```
 
 2. **Required Environment Variables**:
+
    ```
    OPENAI_API_KEY=your_key_here  # For AI features (Phase 2+)
    ```
@@ -178,6 +203,7 @@ POST /api/chat
 ## 🎓 Learning Objectives
 
 This project teaches:
+
 - **React Fundamentals**: Components, state, props, hooks
 - **Next.js Features**: File-based routing, API routes, SSR
 - **API Integration**: REST APIs, data fetching, error handling
@@ -189,6 +215,7 @@ This project teaches:
 ## 🤝 Contributing
 
 When working on this project:
+
 - Follow component-based architecture
 - Keep Pokemon data fetching in utility functions
 - Use TypeScript for type safety where possible
@@ -206,4 +233,4 @@ When working on this project:
 
 ---
 
-*This file should be updated as the project evolves. Last updated: August 2025*
+_This file should be updated as the project evolves. Last updated: August 2025_
