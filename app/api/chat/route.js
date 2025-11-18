@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
 // Initialize Google GenAI client
@@ -84,12 +84,14 @@ export async function POST(request) {
     conversationContext += `\nUser: ${message}\n\nPlease provide a helpful response about Pokemon.`;
 
     // Generate response using Gemini
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: conversationContext,
-    });
-
-    const aiResponse = response.text;
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await model.generateContent(conversationContext);
+    
+    if (!result || !result.response) {
+      throw new Error('No response from Gemini API');
+    }
+    
+    const aiResponse = result.response.text();
 
     // Extract Pokemon names from the response to potentially fetch additional data
     const pokemonNamePattern = /\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b/g;
