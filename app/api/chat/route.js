@@ -86,11 +86,11 @@ export async function POST(request) {
     // Generate response using Gemini
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await model.generateContent(conversationContext);
-    
+
     if (!result || !result.response) {
       throw new Error('No response from Gemini API');
     }
-    
+
     const aiResponse = result.response.text();
 
     // Extract Pokemon names from the response to potentially fetch additional data
