@@ -4,7 +4,7 @@ import PokechatAi from './components/PokechatAi';
 export default function Page() {
   return (
     <div>
-      <HomePage /> 
+      <HomePage />
       <PokechatAi />
     </div>
   );

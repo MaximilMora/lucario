@@ -5,10 +5,11 @@ import { NextResponse } from 'next/server';
 
 const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
 if (!GOOGLE_GENAI_API_KEY) {
-  throw new Error("Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.");
+  throw new Error(
+    'Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.'
+  );
 }
 const ai = new GoogleGenerativeAI(GOOGLE_GENAI_API_KEY);
-
 
 // Pokemon-specific system prompt to guide Gemini's responses
 const POKEMON_SYSTEM_PROMPT = `You are a Pokemon expert assistant. Your role is to provide helpful, accurate information about Pokemon. Follow these guidelines:
@@ -28,7 +29,9 @@ Remember: You're helping Pokemon trainers make better decisions about their team
 // Helper function to fetch Pokemon data from PokeAPI
 async function fetchPokemonData(pokemonName) {
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`);
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`
+    );
     if (!response.ok) {
       return null;
     }
@@ -42,7 +45,9 @@ async function fetchPokemonData(pokemonName) {
 // Helper function to get type effectiveness data
 async function fetchTypeData(typeName) {
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/type/${typeName.toLowerCase()}`);
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/type/${typeName.toLowerCase()}`
+    );
     if (!response.ok) {
       return null;
     }
@@ -61,11 +66,15 @@ export async function POST(request) {
     const { message, conversationHistory = [] } = body;
 
     if (!message) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      );
     }
 
     // Build conversation context
-    let conversationContext = POKEMON_SYSTEM_PROMPT + '\n\nPrevious conversation:\n';
+    let conversationContext =
+      POKEMON_SYSTEM_PROMPT + '\n\nPrevious conversation:\n';
 
     // Add conversation history
     conversationHistory.forEach((msg, index) => {
@@ -96,7 +105,7 @@ export async function POST(request) {
           pokemonData[name.toLowerCase()] = {
             id: data.id,
             name: data.name,
-            types: data.types.map(t => t.type.name),
+            types: data.types.map((t) => t.type.name),
             sprite: data.sprites.front_default,
           };
         }
@@ -113,7 +122,10 @@ export async function POST(request) {
 
     if (error.message.includes('API key')) {
       return NextResponse.json(
-        { error: 'API key not configured. Please set GOOGLE_GENAI_API_KEY environment variable.' },
+        {
+          error:
+            'API key not configured. Please set GOOGLE_GENAI_API_KEY environment variable.',
+        },
         { status: 500 }
       );
     }

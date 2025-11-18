@@ -12,29 +12,31 @@ export default function PokechatAi() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setMessages(prev => prev.filter(msg => !msg.isError));
+      setMessages((prev) => prev.filter((msg) => !msg.isError));
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [messages.filter(msg => msg.isError).length]);
+  }, [messages.filter((msg) => msg.isError).length]);
 
   if (isMinimized) {
     return (
       <div className="fixed bottom-0 right-0 w-80 h-20 max-w-sm bg-white text-black border-gray-300 border-2 shadow-xl z-50 flex flex-col">
-        <PokechatHeader isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+        <PokechatHeader
+          isMinimized={isMinimized}
+          setIsMinimized={setIsMinimized}
+        />
       </div>
     );
   }
   const sendMessage = async () => {
     if (!input.trim()) {
+      console.log('Input empty, message not sent');
 
-      console.log("Input empty, message not sent")
-      
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
-        { 
-          sender: 'bot', 
-          content: 'Please write a message before sending.', 
+        {
+          sender: 'bot',
+          content: 'Please write a message before sending.',
           timestamp: new Date(),
           isError: true,
         },
@@ -50,7 +52,7 @@ export default function PokechatAi() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
-          conversationHistory: messages.map(msg => ({
+          conversationHistory: messages.map((msg) => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.content,
           })),
@@ -66,7 +68,7 @@ export default function PokechatAi() {
       }
 
       // Add messages to chat
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         { sender: 'user', content: input, timestamp: new Date() },
         {
@@ -81,7 +83,7 @@ export default function PokechatAi() {
     } catch (error) {
       console.error('Network error:', error);
       // Mostrar mensaje de error al usuario
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         { sender: 'user', content: input, timestamp: new Date() },
         {
@@ -96,7 +98,7 @@ export default function PokechatAi() {
       setLoading(false);
     }
   };
-  const handleEnter = e => {
+  const handleEnter = (e) => {
     if (e.key === 'Enter') {
       sendMessage();
     }
@@ -104,7 +106,10 @@ export default function PokechatAi() {
 
   return (
     <div className="fixed bottom-0 right-0 w-80 h-96 max-w-sm bg-white text-black border-gray-300 border-2 rounded-lg shadow-xl z-50 flex flex-col">
-      <PokechatHeader isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+      <PokechatHeader
+        isMinimized={isMinimized}
+        setIsMinimized={setIsMinimized}
+      />
       {!isMinimized && (
         <>
           <PokechatMessages messages={messages} />

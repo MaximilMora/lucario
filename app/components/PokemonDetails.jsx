@@ -15,7 +15,9 @@ export default function PokemonDetails({ pokemonId }) {
     const fetchPokemon = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
+        const response = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${pokemonId}`
+        );
 
         if (!response.ok) {
           throw new Error('Pokemon not found');
@@ -62,10 +64,13 @@ export default function PokemonDetails({ pokemonId }) {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
-        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8"
+        >
           ← Back to Pokemon List
         </Link>
-        
+
         {/* Pokemon Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="grid md:grid-cols-2 gap-8">
@@ -78,14 +83,16 @@ export default function PokemonDetails({ pokemonId }) {
                   width={256}
                   height={256}
                   className="w-64 h-64"
-                  onError={e => {
+                  onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
                   }}
                 />
               </div>
 
-              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">{pokemon.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">
+                {pokemon.name}
+              </h1>
 
               <p className="text-xl text-gray-600 mb-4">
                 #{pokemon.id.toString().padStart(3, '0')}
@@ -96,10 +103,15 @@ export default function PokemonDetails({ pokemonId }) {
             <div className="space-y-6">
               {/* Types */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-3">Types</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                  Types
+                </h2>
                 <div className="flex gap-2">
                   {pokemon.types.map((type, index) => (
-                    <div key={index} className="text-blue-800 bg-blue-100 px-3 py-1 rounded-full">
+                    <div
+                      key={index}
+                      className="text-blue-800 bg-blue-100 px-3 py-1 rounded-full"
+                    >
                       {type.type.name}
                     </div>
                   ))}
@@ -108,17 +120,26 @@ export default function PokemonDetails({ pokemonId }) {
 
               {/* Stats */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-3">Base Stats</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                  Base Stats
+                </h2>
                 <div className="space-y-3">
                   {pokemon.stats.map((stat, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="text-gray-700 w-28 capitalize">{stat.stat.name}:</div>
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="text-gray-700 w-28 capitalize">
+                        {stat.stat.name}:
+                      </div>
                       <div className="flex-1 mx-4">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <div 
+                          <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{ 
-                              width: animateStats ? `${(stat.base_stat / 255) * 100}%` : '0%',
+                            style={{
+                              width: animateStats
+                                ? `${(stat.base_stat / 255) * 100}%`
+                                : '0%',
                               transitionProperty: 'width',
                               transitionDuration: '0.3s',
                               transitionTimingFunction: 'linear',
@@ -127,7 +148,9 @@ export default function PokemonDetails({ pokemonId }) {
                           ></div>
                         </div>
                       </div>
-                      <div className="font-bold text-black text-right w-12">{stat.base_stat}</div>
+                      <div className="font-bold text-black text-right w-12">
+                        {stat.base_stat}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -135,7 +158,9 @@ export default function PokemonDetails({ pokemonId }) {
 
               {/* Abilities */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-3">Abilities</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                  Abilities
+                </h2>
                 <div className="text-xl ">
                   {pokemon.abilities.map((ability, index) => (
                     <div key={index} className="text-black mr-2 h-8 capitalize">

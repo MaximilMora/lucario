@@ -42,7 +42,7 @@ The chat API endpoint is now ready at `/api/chat`. Here's how to integrate it:
 const [messages, setMessages] = useState([]);
 const [loading, setLoading] = useState(false);
 
-const sendMessage = async userMessage => {
+const sendMessage = async (userMessage) => {
   setLoading(true);
 
   try {
@@ -51,7 +51,7 @@ const sendMessage = async userMessage => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: userMessage,
-        conversationHistory: messages.map(msg => ({
+        conversationHistory: messages.map((msg) => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content,
         })),
@@ -66,7 +66,7 @@ const sendMessage = async userMessage => {
     }
 
     // Add messages to chat
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       { sender: 'user', content: userMessage, timestamp: new Date() },
       {
@@ -99,7 +99,7 @@ The API automatically detects Pokemon mentioned in responses and fetches their d
 ```jsx
 {
   message.pokemonData &&
-    Object.values(message.pokemonData).map(pokemon => (
+    Object.values(message.pokemonData).map((pokemon) => (
       <img
         key={pokemon.id}
         src={pokemon.sprite}

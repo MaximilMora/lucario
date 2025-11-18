@@ -1,14 +1,22 @@
 import Image from 'next/image';
 import PokemonGallery from './PokemonGallery';
-import PokechatAi from "./PokechatAi";
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import PokechatAi from './PokechatAi';
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header con autenticación */}
       <header className="flex justify-between items-center p-4 bg-white shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Pokemon Gallery Browser</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Pokemon Gallery Browser
+        </h1>
         <div className="flex items-center gap-4">
           <SignedOut>
             <SignInButton mode="modal">
@@ -24,9 +32,7 @@ export default function HomePage() {
           </SignedOut>
           <SignedIn>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                ¡Hola, entrenador!
-              </span>
+              <span className="text-sm text-gray-600">¡Hola, entrenador!</span>
               <UserButton />
             </div>
           </SignedIn>

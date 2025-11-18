@@ -267,7 +267,7 @@ await page.pause(); // Opens Playwright Inspector
 ### See Console Logs
 
 ```javascript
-page.on('console', msg => console.log(msg.text()));
+page.on('console', (msg) => console.log(msg.text()));
 ```
 
 ### Slow Down Tests
