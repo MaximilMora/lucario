@@ -28,7 +28,6 @@ export default function PokemonGallery() {
 
   if (loading) {
     return (
-    
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
         <p className="ml-4 text-gray-600">Loading Pokémon...</p>
@@ -57,9 +56,9 @@ export default function PokemonGallery() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-      {pokemons.map((pokemon) => (
+      {pokemons.map(pokemon => (
         <PokemonCard key={pokemon.name} pokemon={pokemon} />
       ))}
     </div>
   );
-} 
+}

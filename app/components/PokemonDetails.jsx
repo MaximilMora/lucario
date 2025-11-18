@@ -16,14 +16,14 @@ export default function PokemonDetails({ pokemonId }) {
       try {
         setLoading(true);
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
-        
+
         if (!response.ok) {
           throw new Error('Pokemon not found');
         }
-        
+
         const data = await response.json();
         setPokemon(data);
-        
+
         // Activate animation after loading data
         setTimeout(() => {
           setAnimateStats(true);
@@ -62,10 +62,7 @@ export default function PokemonDetails({ pokemonId }) {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
-        <Link 
-          href="/" 
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8"
-        >
+        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8">
           ← Back to Pokemon List
         </Link>
         
@@ -81,17 +78,15 @@ export default function PokemonDetails({ pokemonId }) {
                   width={256}
                   height={256}
                   className="w-64 h-64"
-                  onError={(e) => {
+                  onError={e => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
                   }}
                 />
               </div>
-              
-              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">
-                {pokemon.name}
-              </h1>
-              
+
+              <h1 className="text-3xl font-bold text-gray-800 capitalize mb-2">{pokemon.name}</h1>
+
               <p className="text-xl text-gray-600 mb-4">
                 #{pokemon.id.toString().padStart(3, '0')}
               </p>
@@ -127,7 +122,7 @@ export default function PokemonDetails({ pokemonId }) {
                               transitionProperty: 'width',
                               transitionDuration: '0.3s',
                               transitionTimingFunction: 'linear',
-                              transitionDelay: `${index * 100}ms`
+                              transitionDelay: `${index * 100}ms`,
                             }}
                           ></div>
                         </div>
@@ -141,9 +136,9 @@ export default function PokemonDetails({ pokemonId }) {
               {/* Abilities */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Abilities</h2>
-                <div className="space-y-2">
+                <div className="text-xl ">
                   {pokemon.abilities.map((ability, index) => (
-                    <div key={index} className="text-black capitalize">
+                    <div key={index} className="text-black mr-2 h-8 capitalize">
                       {ability.ability.name}
                     </div>
                   ))}
@@ -152,16 +147,17 @@ export default function PokemonDetails({ pokemonId }) {
 
               {/* Physical Characteristics */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-black py-1">
-                    <strong>Height:</strong><br />
+                <div className="text-xl">
+                  <div className="text-black py-1 w-20 mr-2">
+                    <strong>Height:</strong>
+                    <br />
                     {pokemon.height / 10}m
                   </div>
                 </div>
-                <div>
-                  <div className="text-black py-1">
-                    <strong>Weight:</strong><br />
-                    {pokemon.weight / 10}kg
+                <div className="text-xl">
+                  <div className="text-black py-1 mr-2 ">
+                    <strong>Weight:</strong>
+                    <br /> {pokemon.weight / 10}Kg
                   </div>
                 </div>
               </div>
