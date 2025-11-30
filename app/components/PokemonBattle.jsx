@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import BattleHPBar from './BattleHPBar';
@@ -15,6 +15,7 @@ export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const battleIdRef = useRef(null); // Store battle ID for database updates
 
   // Inicializar combate
   useEffect(() => {
@@ -22,6 +23,62 @@ export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBa
       initializeBattle();
     }
   }, [playerPokemonId, opponentPokemonId]);
+
+  /**
+   * Save battle to database when it starts
+   */
+  const saveBattleStart = async (playerPokemon, opponentPokemon) => {
+    try {
+      const response = await fetch('/api/battles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'start',
+          playerPokemonId: playerPokemon.id,
+          playerPokemonName: playerPokemon.name,
+          opponentPokemonId: opponentPokemon.id,
+          opponentPokemonName: opponentPokemon.name,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.battleId) {
+        battleIdRef.current = data.battleId;
+        console.log('Battle saved to database:', data.battleId);
+      }
+    } catch (err) {
+      // Don't block the battle if database save fails
+      console.warn('Could not save battle to database:', err);
+    }
+  };
+
+  /**
+   * Update battle in database when it ends
+   */
+  const saveBattleEnd = async (winner, playerFinalHp, opponentFinalHp) => {
+    if (!battleIdRef.current) return;
+
+    try {
+      const response = await fetch('/api/battles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'end',
+          battleId: battleIdRef.current,
+          winner: winner,
+          playerFinalHp: playerFinalHp,
+          opponentFinalHp: opponentFinalHp,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('Battle result saved:', data.battle);
+      }
+    } catch (err) {
+      console.warn('Could not save battle result:', err);
+    }
+  };
 
   const initializeBattle = async () => {
     try {
@@ -45,6 +102,9 @@ export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBa
       }
 
       setBattleState(data.battleState);
+
+      // Save battle to database (non-blocking)
+      saveBattleStart(data.battleState.player.pokemon, data.battleState.opponent.pokemon);
     } catch (err) {
       setError(err.message);
       console.error('Error initializing battle:', err);
@@ -82,11 +142,20 @@ export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBa
         setBattleState(data.battleState);
         setIsAttacking(false);
 
-        // Si el combate terminó, notificar
-        if (data.battleState.battleStatus !== 'active' && onBattleEnd) {
-          setTimeout(() => {
-            onBattleEnd(data.battleState.battleStatus);
-          }, 2000);
+        // Si el combate terminó, guardar resultado y notificar
+        if (data.battleState.battleStatus !== 'active') {
+          // Save battle result to database
+          saveBattleEnd(
+            data.battleState.battleStatus,
+            data.battleState.player.currentHP,
+            data.battleState.opponent.currentHP
+          );
+
+          if (onBattleEnd) {
+            setTimeout(() => {
+              onBattleEnd(data.battleState.battleStatus);
+            }, 2000);
+          }
         }
       }, 500);
     } catch (err) {
