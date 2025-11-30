@@ -47,19 +47,27 @@ export default function HomePage() {
             <PokechatAi key="pokechat-ai" />
           </SignedIn>
           <SignedOut>
-            <div className="text-center py-20">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to Pokemon Gallery
-              </h2>
-              <p className="text-gray-600 mb-8">
-                Sign in to explore Pokemon and chat with our AI assistant
-              </p>
-              <SignInButton mode="modal">
-                <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 text-lg transition-colors">
-                  Get Started
-                </button>
-              </SignInButton>
-            </div>
+            {/* Show gallery in test environment */}
+            {process.env.NEXT_PUBLIC_SKIP_AUTH === 'true' ? (
+              <>
+                <PokemonGallery key="pokemon-gallery" />
+                <PokechatAi key="pokechat-ai" />
+              </>
+            ) : (
+              <div className="text-center py-20">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Welcome to Pokemon Gallery
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  Sign in to explore Pokemon and chat with our AI assistant
+                </p>
+                <SignInButton mode="modal">
+                  <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 text-lg transition-colors">
+                    Get Started
+                  </button>
+                </SignInButton>
+              </div>
+            )}
           </SignedOut>
         </div>
       </div>

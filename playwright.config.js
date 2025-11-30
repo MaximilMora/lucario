@@ -20,9 +20,12 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: 'NEXT_PUBLIC_SKIP_AUTH=true npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      NEXT_PUBLIC_SKIP_AUTH: 'true',
+    },
   },
 });
