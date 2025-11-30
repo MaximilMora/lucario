@@ -6,7 +6,7 @@ test.describe('Pokemon Gallery', () => {
     await page.route('https://pokeapi.co/api/v2/pokemon*', async (route) => {
       const url = new URL(route.request().url());
       const limit = url.searchParams.get('limit') || '20';
-      
+
       const mockPokemons = Array.from({ length: parseInt(limit) }, (_, i) => ({
         name: i === 0 ? 'bulbasaur' : `pokemon-${i + 1}`,
         url: `https://pokeapi.co/api/v2/pokemon/${i + 1}/`,
@@ -41,7 +41,12 @@ test.describe('Pokemon Gallery', () => {
     await expect(page.getByText('Pokemon Gallery Browser')).toBeVisible();
 
     // Wait for loading to complete
-    await page.waitForSelector('text=Loading Pokémon...', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 5000,
+      })
+      .catch(() => {});
 
     await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 15000 });
   });
@@ -50,7 +55,12 @@ test.describe('Pokemon Gallery', () => {
     await page.goto('/');
 
     // Wait for loading to complete
-    await page.waitForSelector('text=Loading Pokémon...', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 5000,
+      })
+      .catch(() => {});
 
     const bulbasaurCard = page.getByText('bulbasaur');
     await expect(bulbasaurCard).toBeVisible({ timeout: 15000 });
@@ -66,7 +76,12 @@ test.describe('Pokemon Gallery', () => {
     await page.goto('/');
 
     // Wait for loading to complete
-    await page.waitForSelector('text=Loading Pokémon...', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 5000,
+      })
+      .catch(() => {});
 
     await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 15000 });
 
@@ -78,7 +93,12 @@ test.describe('Pokemon Gallery', () => {
     await page.goto('/');
 
     // Wait for loading to complete
-    await page.waitForSelector('text=Loading Pokémon...', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 5000,
+      })
+      .catch(() => {});
 
     await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 15000 });
 
@@ -90,7 +110,12 @@ test.describe('Pokemon Gallery', () => {
     await page.goto('/');
 
     // Wait for loading to complete
-    await page.waitForSelector('text=Loading Pokémon...', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 5000,
+      })
+      .catch(() => {});
 
     await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 15000 });
 
