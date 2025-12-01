@@ -27,7 +27,7 @@ export default function PokemonCard({ pokemon }) {
           width={96}
           height={96}
           className="w-24 h-24"
-          onError={e => {
+          onError={(e) => {
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}
@@ -37,7 +37,9 @@ export default function PokemonCard({ pokemon }) {
         </div>
       </div>
 
-      <h3 className="font-semibold text-gray-800 mb-2 capitalize">{pokemon.name}</h3>
+      <h3 className="font-semibold text-gray-800 mb-2 capitalize">
+        {pokemon.name}
+      </h3>
 
       <p className="text-sm text-gray-600">#{pokemonId.padStart(3, '0')}</p>
     </div>

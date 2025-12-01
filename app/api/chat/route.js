@@ -1,8 +1,15 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
 // Initialize Google GenAI client
-const ai = new GoogleGenAI({});
+
+const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
+if (!GOOGLE_GENAI_API_KEY) {
+  throw new Error(
+    'Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.'
+  );
+}
+const ai = new GoogleGenerativeAI(GOOGLE_GENAI_API_KEY);
 
 // Pokemon-specific system prompt to guide Gemini's responses
 const POKEMON_SYSTEM_PROMPT = `You are a Pokemon expert assistant. Your role is to provide helpful, accurate information about Pokemon. Follow these guidelines:
@@ -22,7 +29,9 @@ Remember: You're helping Pokemon trainers make better decisions about their team
 // Helper function to fetch Pokemon data from PokeAPI
 async function fetchPokemonData(pokemonName) {
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`);
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`
+    );
     if (!response.ok) {
       return null;
     }
@@ -36,7 +45,9 @@ async function fetchPokemonData(pokemonName) {
 // Helper function to get type effectiveness data
 async function fetchTypeData(typeName) {
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/type/${typeName.toLowerCase()}`);
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/type/${typeName.toLowerCase()}`
+    );
     if (!response.ok) {
       return null;
     }
@@ -47,17 +58,23 @@ async function fetchTypeData(typeName) {
   }
 }
 
+export const maxDuration = 30; // 30 seconds maximum
+
 export async function POST(request) {
   try {
     const body = await request.json();
     const { message, conversationHistory = [] } = body;
 
     if (!message) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      );
     }
 
     // Build conversation context
-    let conversationContext = POKEMON_SYSTEM_PROMPT + '\n\nPrevious conversation:\n';
+    let conversationContext =
+      POKEMON_SYSTEM_PROMPT + '\n\nPrevious conversation:\n';
 
     // Add conversation history
     conversationHistory.forEach((msg, index) => {
@@ -67,12 +84,14 @@ export async function POST(request) {
     conversationContext += `\nUser: ${message}\n\nPlease provide a helpful response about Pokemon.`;
 
     // Generate response using Gemini
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: conversationContext,
-    });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await model.generateContent(conversationContext);
 
-    const aiResponse = response.text;
+    if (!result || !result.response) {
+      throw new Error('No response from Gemini API');
+    }
+
+    const aiResponse = result.response.text();
 
     // Extract Pokemon names from the response to potentially fetch additional data
     const pokemonNamePattern = /\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b/g;
@@ -88,7 +107,7 @@ export async function POST(request) {
           pokemonData[name.toLowerCase()] = {
             id: data.id,
             name: data.name,
-            types: data.types.map(t => t.type.name),
+            types: data.types.map((t) => t.type.name),
             sprite: data.sprites.front_default,
           };
         }
@@ -105,8 +124,18 @@ export async function POST(request) {
 
     if (error.message.includes('API key')) {
       return NextResponse.json(
-        { error: 'API key not configured. Please set GEMINI_API_KEY environment variable.' },
+        {
+          error:
+            'API key not configured. Please set GOOGLE_GENAI_API_KEY environment variable.',
+        },
         { status: 500 }
+      );
+    }
+
+    if (error.message.includes('quota') || error.message.includes('limit')) {
+      return NextResponse.json(
+        { error: 'API quota exceeded. Please try again later.' },
+        { status: 429 }
       );
     }
 
