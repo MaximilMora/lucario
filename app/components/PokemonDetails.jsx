@@ -67,10 +67,6 @@ export default function PokemonDetails({ pokemonId }) {
         <Link 
           href="/" 
           className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8 bg-blue-200 rounded-full px-4 py-2 hover:bg-blue-100"
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8"
         >
           ← Back to Pokemon List
         </Link>
