@@ -14,7 +14,8 @@
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.6",
@@ -28,9 +29,14 @@
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.6",
+    "jsdom": "^27.0.1",
     "prettier": "^3.6.2",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "vitest": "^3.2.4"
   }
 }
