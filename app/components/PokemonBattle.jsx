@@ -10,7 +10,11 @@ import BattleActions from './BattleActions';
 /**
  * Componente principal del sistema de combate por turnos
  */
-export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBattleEnd }) {
+export default function PokemonBattle({
+  playerPokemonId,
+  opponentPokemonId,
+  onBattleEnd,
+}) {
   const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -256,4 +260,3 @@ export default function PokemonBattle({ playerPokemonId, opponentPokemonId, onBa
     </div>
   );
 }
-

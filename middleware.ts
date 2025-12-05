@@ -1,6 +1,11 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
-export default clerkMiddleware();
+export default clerkMiddleware({
+  // Permitir acceso público en modo test
+  publicRoutes: process.env.NEXT_PUBLIC_SKIP_AUTH === 'true' 
+    ? ['/', '/pokemon(.*)', '/battle(.*)', '/api(.*)']
+    : [],
+});
 
 export const config = {
   matcher: [

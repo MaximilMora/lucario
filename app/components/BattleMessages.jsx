@@ -25,4 +25,3 @@ export default function BattleMessages({ messages = [] }) {
     </div>
   );
 }
-

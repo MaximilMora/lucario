@@ -3,7 +3,11 @@
 /**
  * Selector de acciones de combate
  */
-export default function BattleActions({ attacks = [], onSelectAttack, disabled = false }) {
+export default function BattleActions({
+  attacks = [],
+  onSelectAttack,
+  disabled = false,
+}) {
   if (!attacks || attacks.length === 0) {
     return (
       <div className="grid grid-cols-2 gap-2">
@@ -36,4 +40,3 @@ export default function BattleActions({ attacks = [], onSelectAttack, disabled =
     </div>
   );
 }
-

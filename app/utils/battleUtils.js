@@ -45,18 +45,14 @@ export function getPokemonAttacks(pokemon) {
  * Obtiene el stat de ataque de un Pokémon
  */
 export function getAttackStat(pokemon) {
-  return (
-    pokemon.stats?.find((s) => s.stat.name === 'attack')?.base_stat || 50
-  );
+  return pokemon.stats?.find((s) => s.stat.name === 'attack')?.base_stat || 50;
 }
 
 /**
  * Obtiene el stat de defensa de un Pokémon
  */
 export function getDefenseStat(pokemon) {
-  return (
-    pokemon.stats?.find((s) => s.stat.name === 'defense')?.base_stat || 50
-  );
+  return pokemon.stats?.find((s) => s.stat.name === 'defense')?.base_stat || 50;
 }
 
 /**
@@ -75,4 +71,3 @@ export function capitalize(str) {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-

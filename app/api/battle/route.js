@@ -36,7 +36,10 @@ export async function POST(request) {
     const { action } = body;
 
     if (!action) {
-      return NextResponse.json({ error: 'Action is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Action is required' },
+        { status: 400 }
+      );
     }
 
     // Inicializar combate
@@ -225,4 +228,3 @@ export async function POST(request) {
     );
   }
 }
-

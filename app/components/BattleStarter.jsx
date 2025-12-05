@@ -23,7 +23,9 @@ export default function BattleStarter() {
   const fetchPokemons = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+      const response = await fetch(
+        'https://pokeapi.co/api/v2/pokemon?limit=151'
+      );
       if (!response.ok) throw new Error('Error al cargar Pokémon');
 
       const data = await response.json();
@@ -42,7 +44,7 @@ export default function BattleStarter() {
       do {
         randomOpponentId = Math.floor(Math.random() * pokemons.length) + 1;
       } while (randomOpponentId === playerPokemonId);
-      
+
       setOpponentPokemonId(randomOpponentId);
       setSelectedOpponent(pokemons[randomOpponentId - 1]);
       setShowBattle(true);
@@ -158,13 +160,10 @@ export default function BattleStarter() {
               }
             `}
           >
-            {playerPokemonId
-              ? '¡Comenzar Combate!'
-              : 'Selecciona tu Pokémon'}
+            {playerPokemonId ? '¡Comenzar Combate!' : 'Selecciona tu Pokémon'}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
