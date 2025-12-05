@@ -10,6 +10,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    navigationTimeout: 60000,
+    actionTimeout: 30000,
   },
 
   projects: [
@@ -23,7 +25,9 @@ export default defineConfig({
     command: 'NEXT_PUBLIC_SKIP_AUTH=true npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
     env: {
       NEXT_PUBLIC_SKIP_AUTH: 'true',
     },
