@@ -1,11 +1,15 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-export default clerkMiddleware({
-  // Permitir acceso público en modo test
-  publicRoutes:
-    process.env.NEXT_PUBLIC_SKIP_AUTH === 'true'
-      ? ['/', '/pokemon(.*)', '/battle(.*)', '/api(.*)']
-      : [],
+const isPublicRoute = createRouteMatcher(
+  process.env.NEXT_PUBLIC_SKIP_AUTH === 'true'
+    ? ['/', '/pokemon(.*)', '/battle(.*)', '/api(.*)']
+    : []
+);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
 });
 
 export const config = {
