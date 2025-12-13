@@ -57,7 +57,10 @@ test.describe('Pokemon Gallery', () => {
   test('displays Pokemon cards on home page', async ({ page }) => {
     // Wait for server to be ready
     await page.waitForTimeout(2000);
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     await expect(page.getByText('Pokemon Gallery Browser')).toBeVisible();
 
@@ -75,7 +78,10 @@ test.describe('Pokemon Gallery', () => {
   test('user can navigate to Pokemon detail page', async ({ page }) => {
     // Wait for server to be ready
     await page.waitForTimeout(2000);
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
@@ -98,7 +104,10 @@ test.describe('Pokemon Gallery', () => {
   test('displays Pokemon image', async ({ page }) => {
     // Wait for server to be ready
     await page.waitForTimeout(2000);
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
@@ -113,10 +122,10 @@ test.describe('Pokemon Gallery', () => {
     // Wait for images to load - Next.js Image component may take time
     // Try multiple selectors as Next.js Image can render differently
     const imageLocator = page.locator('img[alt="bulbasaur"]').first();
-    
+
     // Wait for image to be visible
     await expect(imageLocator).toBeVisible({ timeout: 30000 });
-    
+
     // Wait for image to have loaded (check that it has a src)
     await expect(imageLocator).toHaveAttribute('src', /.+/, { timeout: 10000 });
   });
@@ -124,7 +133,10 @@ test.describe('Pokemon Gallery', () => {
   test('displays formatted Pokemon ID', async ({ page }) => {
     // Wait for server to be ready
     await page.waitForTimeout(2000);
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
@@ -143,7 +155,10 @@ test.describe('Pokemon Gallery', () => {
   test('Pokemon card has hover effect', async ({ page }) => {
     // Wait for server to be ready
     await page.waitForTimeout(2000);
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page

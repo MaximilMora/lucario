@@ -36,7 +36,9 @@ export default function HomePage() {
               </SignedOut>
               <SignedIn>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">¡Hola, entrenador!</span>
+                  <span className="text-sm text-gray-600">
+                    ¡Hola, entrenador!
+                  </span>
                   <UserButton />
                 </div>
               </SignedIn>
