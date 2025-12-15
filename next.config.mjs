@@ -1,4 +1,3 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -9,6 +8,9 @@ const nextConfig = {
         pathname: '/PokeAPI/sprites/master/sprites/pokemon/**',
       },
     ],
+  },
+  eslint: {
+    dirs: ['app', 'components', '__tests__', 'e2e'],
   },
 };
 

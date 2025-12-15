@@ -12,6 +12,16 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+*.png
+*.jpg
+*.jpeg
+/playwright/.cache/
+/.nyc_output
+
+# prettier
+.prettierignore
 
 # next.js
 /.next/
@@ -39,3 +49,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# clerk configuration (can include secrets)
+/.clerk/

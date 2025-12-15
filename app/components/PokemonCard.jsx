@@ -16,7 +16,7 @@ export default function PokemonCard({ pokemon }) {
   };
 
   return (
-    <div 
+    <div
       className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer w-[200px] h-[250px] flex flex-col items-center justify-center p-4"
       onClick={handleClick}
     >
@@ -36,14 +36,12 @@ export default function PokemonCard({ pokemon }) {
           <span className="text-gray-500 text-sm">Image</span>
         </div>
       </div>
-      
+
       <h3 className="font-semibold text-gray-800 mb-2 capitalize">
         {pokemon.name}
       </h3>
-      
-      <p className="text-sm text-gray-600">
-        #{pokemonId.padStart(3, '0')}
-      </p>
+
+      <p className="text-sm text-gray-600">#{pokemonId.padStart(3, '0')}</p>
     </div>
   );
 }

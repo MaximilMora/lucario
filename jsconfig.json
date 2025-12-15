@@ -1,7 +1,27 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    }
-  }
+      "@/*": ["./*"],
+      "@/components/*": ["./app/components/*"],
+      "@/utils/*": ["./app/utils/*"],
+      "@/api/*": ["./app/api/*"]
+    },
+    "jsx": "preserve",
+    "module": "esnext",
+    "target": "es2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": []
+  },
+  "include": ["next-env.d.js", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules"]
 }
