@@ -34,14 +34,17 @@ function getSupabaseClient() {
  * Cliente de Supabase para uso en servidor (API routes, server components)
  * Usa la service_role key que bypassa RLS
  * ⚠️ NUNCA usar este cliente en componentes de cliente
- * 
+ *
  * Nota: El cliente se crea de forma lazy para evitar errores en build
  * si las variables de entorno no están configuradas
  */
-export const supabaseServer = new Proxy({}, {
-  get(_target, prop) {
-    const client = getSupabaseClient();
-    const value = client[prop];
-    return typeof value === 'function' ? value.bind(client) : value;
-  },
-});
+export const supabaseServer = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const client = getSupabaseClient();
+      const value = client[prop];
+      return typeof value === 'function' ? value.bind(client) : value;
+    },
+  }
+);

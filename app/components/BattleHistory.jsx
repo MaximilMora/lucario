@@ -104,7 +104,9 @@ export default function BattleHistory() {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Historial de Batallas</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Historial de Batallas
+        </h2>
         <button
           onClick={fetchBattles}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
