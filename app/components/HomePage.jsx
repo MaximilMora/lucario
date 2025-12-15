@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import PokemonGallery from './PokemonGallery';
 import PokechatAi from './PokechatAi';
 import {
@@ -50,6 +51,13 @@ export default function HomePage() {
       {/* Contenido principal */}
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
+        <div className="mb-6 flex justify-end">
+        <Link href="/battle">
+        <button className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-semibold">
+          Ir al modo batalla
+          </button>
+        </Link>
+        </div>
           {skipAuth ? (
             <>
               <PokemonGallery key="pokemon-gallery" />
