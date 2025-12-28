@@ -57,6 +57,30 @@ export default function PokemonBattle({
     }
   };
 
+  // Función para guardar la batalla en Supabase
+  const saveBattleToDatabase = async (finalBattleState) => {
+    try {
+      const { player, opponent, battleStatus, messages } = finalBattleState;
+
+      await fetch('/api/battles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerPokemonId: playerPokemonId,
+          opponentPokemonId: opponentPokemonId,
+          playerPokemonName: player.pokemon?.name || '',
+          opponentPokemonName: opponent.pokemon?.name || '',
+          battleStatus: battleStatus,
+          messages: messages || [],
+          // user_id: null, // Opcional: puedes obtenerlo de Clerk si lo implementas
+        }),
+      });
+    } catch (error) {
+      // No bloqueamos la UI si falla guardar en BD
+      console.error('Error saving battle to database:', error);
+    }
+  };
+
   const handleAttack = async (attackId) => {
     if (!battleState || battleState.battleStatus !== 'active' || isAttacking) {
       return;
@@ -86,11 +110,17 @@ export default function PokemonBattle({
         setBattleState(data.battleState);
         setIsAttacking(false);
 
-        // Si el combate terminó, notificar
-        if (data.battleState.battleStatus !== 'active' && onBattleEnd) {
-          setTimeout(() => {
-            onBattleEnd(data.battleState.battleStatus);
-          }, 2000);
+        // Si el combate terminó, guardar en BD y notificar
+        if (data.battleState.battleStatus !== 'active') {
+          // Guardar en Supabase (no bloquea la UI)
+          saveBattleToDatabase(data.battleState);
+
+          // Notificar al componente padre
+          if (onBattleEnd) {
+            setTimeout(() => {
+              onBattleEnd(data.battleState.battleStatus);
+            }, 2000);
+          }
         }
       }, 500);
     } catch (err) {
