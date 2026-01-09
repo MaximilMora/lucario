@@ -11,7 +11,10 @@ export async function GET(request) {
     const user_id = searchParams.get('user_id');
 
     if (!user_id) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'user_id is required' },
+        { status: 400 }
+      );
     }
 
     // Obtener estadísticas
