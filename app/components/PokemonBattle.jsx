@@ -68,41 +68,17 @@ export default function PokemonBattle({
     try {
       const { player, opponent, battleStatus, messages } = finalBattleState;
 
-      // Calcular duración (aproximada)
-      const durationSeconds = battleStartTimeRef.current
-        ? Math.floor((Date.now() - battleStartTimeRef.current) / 1000)
-        : 0;
-
-      // Obtener username del usuario
-      const username =
-        user?.username ||
-        user?.firstName ||
-        user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-        'Guest';
-
       await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Jugador 1 (usuario actual)
-          player1UserId: user?.id || 'guest',
-          player1Username: username,
-          player1PokemonId: playerPokemonId,
-          player1PokemonName: player.pokemon?.name || '',
-          // Jugador 2 (AI oponente por ahora)
-          player2UserId: null, // AI no tiene user_id
-          player2Username: 'AI Opponent',
-          player2PokemonId: opponentPokemonId,
-          player2PokemonName: opponent.pokemon?.name || '',
-          // Estado de la batalla
+          playerPokemonId: playerPokemonId,
+          opponentPokemonId: opponentPokemonId,
+          playerPokemonName: player.pokemon?.name || '',
+          opponentPokemonName: opponent.pokemon?.name || '',
           battleStatus: battleStatus,
-          totalTurns: turnCountRef.current,
-          durationSeconds: durationSeconds,
           messages: messages || [],
-          startedAt: battleStartTimeRef.current
-            ? new Date(battleStartTimeRef.current).toISOString()
-            : new Date().toISOString(),
-          finishedAt: new Date().toISOString(),
+          // user_id: null, // Opcional: puedes obtenerlo de Clerk si lo implementas
         }),
       });
     } catch (error) {
@@ -140,6 +116,11 @@ export default function PokemonBattle({
         setBattleState(data.battleState);
         setIsAttacking(false);
         turnCountRef.current += 1; // Incrementar contador de turnos
+
+        // Si el combate terminó, guardar en BD y notificar
+        if (data.battleState.battleStatus !== 'active') {
+          // Guardar en Supabase (no bloquea la UI)
+          saveBattleToDatabase(data.battleState);
 
         // Si el combate terminó, guardar en BD y notificar
         if (data.battleState.battleStatus !== 'active') {
