@@ -46,14 +46,14 @@ export default function BattleHistory() {
     });
   };
 
-  const getWinnerBadge = (winner) => {
-    if (winner === 'player') {
+  const getWinnerBadge = (winnerSide) => {
+    if (winnerSide === 'player1') {
       return (
         <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
           Victoria
         </span>
       );
-    } else if (winner === 'opponent') {
+    } else if (winnerSide === 'player2') {
       return (
         <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">
           Derrota
@@ -124,29 +124,50 @@ export default function BattleHistory() {
             <div className="flex justify-between items-start mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="font-semibold text-gray-800 capitalize">
-                    {battle.player_pokemon_name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">
+                      {battle.player1_username}
+                    </span>
+                    <span className="font-semibold text-gray-800 capitalize">
+                      {battle.player1_pokemon_name}
+                    </span>
+                  </div>
                   <span className="text-gray-500">vs</span>
-                  <span className="font-semibold text-gray-800 capitalize">
-                    {battle.opponent_pokemon_name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">
+                      {battle.player2_username}
+                    </span>
+                    <span className="font-semibold text-gray-800 capitalize">
+                      {battle.player2_pokemon_name}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">
-                    {formatDate(battle.created_at)}
+                    {formatDate(battle.finished_at || battle.created_at)}
                   </span>
-                  {getWinnerBadge(battle.winner)}
+                  {battle.total_turns > 0 && (
+                    <span className="text-xs text-gray-500">
+                      • {battle.total_turns} turnos
+                    </span>
+                  )}
+                  {battle.duration_seconds && (
+                    <span className="text-xs text-gray-500">
+                      • {Math.floor(battle.duration_seconds / 60)}m{' '}
+                      {battle.duration_seconds % 60}s
+                    </span>
+                  )}
+                  {getWinnerBadge(battle.winner_side)}
                 </div>
               </div>
             </div>
-            {battle.log?.messages && (
+            {battle.battle_log?.messages && (
               <details className="mt-2">
                 <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
                   Ver detalles del combate
                 </summary>
                 <div className="mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 max-h-40 overflow-y-auto">
-                  {battle.log.messages.map((msg, idx) => (
+                  {battle.battle_log.messages.map((msg, idx) => (
                     <p key={idx}>{msg}</p>
                   ))}
                 </div>
