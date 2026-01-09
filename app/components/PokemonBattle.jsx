@@ -16,7 +16,7 @@ export default function PokemonBattle({
   opponentPokemonId,
   onBattleEnd,
 }) {
-  const { user } = useUser(); // Obtener usuario de Clerk
+  const { user, isLoaded } = useUser(); // Obtener usuario de Clerk
   const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,19 +73,27 @@ export default function PokemonBattle({
         ? Math.floor((Date.now() - battleStartTimeRef.current) / 1000)
         : 0;
 
-      // Obtener username del usuario
-      const username =
-        user?.username ||
-        user?.firstName ||
-        user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-        'Guest';
+      // Obtener username del usuario de forma segura
+      let username = 'Guest';
+      let userId = 'guest';
+
+      if (isLoaded && user) {
+        userId = user.id || 'guest';
+        username =
+          user.username ||
+          user.firstName ||
+          (user.primaryEmailAddress?.emailAddress
+            ? user.primaryEmailAddress.emailAddress.split('@')[0]
+            : null) ||
+          'Guest';
+      }
 
       await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           // Jugador 1 (usuario actual)
-          player1UserId: user?.id || 'guest',
+          player1UserId: userId,
           player1Username: username,
           player1PokemonId: playerPokemonId,
           player1PokemonName: player.pokemon?.name || '',
