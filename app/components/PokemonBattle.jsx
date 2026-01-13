@@ -92,25 +92,13 @@ export default function PokemonBattle({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Jugador 1 (usuario actual)
-          player1UserId: userId,
-          player1Username: username,
-          player1PokemonId: playerPokemonId,
-          player1PokemonName: player.pokemon?.name || '',
-          // Jugador 2 (AI oponente por ahora)
-          player2UserId: null, // AI no tiene user_id
-          player2Username: 'AI Opponent',
-          player2PokemonId: opponentPokemonId,
-          player2PokemonName: opponent.pokemon?.name || '',
-          // Estado de la batalla
+          playerPokemonId: playerPokemonId,
+          opponentPokemonId: opponentPokemonId,
+          playerPokemonName: player.pokemon?.name || '',
+          opponentPokemonName: opponent.pokemon?.name || '',
           battleStatus: battleStatus,
-          totalTurns: turnCountRef.current,
-          durationSeconds: durationSeconds,
           messages: messages || [],
-          startedAt: battleStartTimeRef.current
-            ? new Date(battleStartTimeRef.current).toISOString()
-            : new Date().toISOString(),
-          finishedAt: new Date().toISOString(),
+          user_id: userId !== 'guest' ? userId : null,
         }),
       });
     } catch (error) {
