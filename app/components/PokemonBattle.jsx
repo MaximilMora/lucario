@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
 import BattleHPBar from './BattleHPBar';
 import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
@@ -16,13 +15,10 @@ export default function PokemonBattle({
   opponentPokemonId,
   onBattleEnd,
 }) {
-  const { user, isLoaded } = useUser(); // Obtener usuario de Clerk
   const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
-  const battleStartTimeRef = useRef(null);
-  const turnCountRef = useRef(0);
 
   // Inicializar combate
   useEffect(() => {
@@ -53,8 +49,6 @@ export default function PokemonBattle({
       }
 
       setBattleState(data.battleState);
-      battleStartTimeRef.current = Date.now(); // Guardar tiempo de inicio
-      turnCountRef.current = 0; // Resetear contador de turnos
     } catch (err) {
       setError(err.message);
       console.error('Error initializing battle:', err);
@@ -68,26 +62,6 @@ export default function PokemonBattle({
     try {
       const { player, opponent, battleStatus, messages } = finalBattleState;
 
-      // Calcular duración (aproximada)
-      const durationSeconds = battleStartTimeRef.current
-        ? Math.floor((Date.now() - battleStartTimeRef.current) / 1000)
-        : 0;
-
-      // Obtener username del usuario de forma segura
-      let username = 'Guest';
-      let userId = 'guest';
-
-      if (isLoaded && user) {
-        userId = user.id || 'guest';
-        username =
-          user.username ||
-          user.firstName ||
-          (user.primaryEmailAddress?.emailAddress
-            ? user.primaryEmailAddress.emailAddress.split('@')[0]
-            : null) ||
-          'Guest';
-      }
-
       await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +72,7 @@ export default function PokemonBattle({
           opponentPokemonName: opponent.pokemon?.name || '',
           battleStatus: battleStatus,
           messages: messages || [],
-          user_id: userId !== 'guest' ? userId : null,
+          // user_id: null, // Opcional: puedes obtenerlo de Clerk si lo implementas
         }),
       });
     } catch (error) {
@@ -135,7 +109,6 @@ export default function PokemonBattle({
       setTimeout(() => {
         setBattleState(data.battleState);
         setIsAttacking(false);
-        turnCountRef.current += 1; // Incrementar contador de turnos
 
         // Si el combate terminó, guardar en BD y notificar
         if (data.battleState.battleStatus !== 'active') {

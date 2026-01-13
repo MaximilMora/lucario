@@ -1,28 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Pokemon Gallery', () => {
-  // Helper function para navegar de forma robusta
-  async function navigateToHome(page) {
-    // Intentar navegar con retry si falla
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        await page.goto('/', {
-          waitUntil: 'load', // Más rápido y menos propenso a fallos que 'networkidle'
-          timeout: 30000,
-        });
-        // Verificar que la página cargó correctamente
-        await expect(page).toHaveTitle(/.+/, { timeout: 5000 });
-        return;
-      } catch (error) {
-        retries--;
-        if (retries === 0) throw error;
-        // Esperar un poco antes de reintentar
-        await page.waitForTimeout(1000);
-      }
-    }
-  }
-
   test.beforeEach(async ({ page, context }) => {
     // Mock Clerk to always return signed in state
     await page.addInitScript(() => {
@@ -77,37 +55,39 @@ test.describe('Pokemon Gallery', () => {
   });
 
   test('displays Pokemon cards on home page', async ({ page }) => {
-    // Navegar a la página de forma robusta
-    await navigateToHome(page);
-
-    // Verificar que el header está visible
-    await expect(page.getByText('Pokemon Gallery Browser')).toBeVisible({
-      timeout: 10000,
+    // Wait for server to be ready
+    await page.waitForTimeout(2000);
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
     });
 
-    // Wait for loading to complete (esperar que desaparezca el texto de loading)
-    await page
-      .waitForSelector('text=Loading Pokémon...', {
-        state: 'hidden',
-        timeout: 15000,
-      })
-      .catch(() => {
-        // Si no aparece el texto de loading, continuar
-      });
-
-    // Esperar a que el contenido esté visible
-    await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 30000 });
-  });
-
-  test('user can navigate to Pokemon detail page', async ({ page }) => {
-    // Navegar a la página de forma robusta
-    await navigateToHome(page);
+    await expect(page.getByText('Pokemon Gallery Browser')).toBeVisible();
 
     // Wait for loading to complete
     await page
       .waitForSelector('text=Loading Pokémon...', {
         state: 'hidden',
-        timeout: 15000,
+        timeout: 10000,
+      })
+      .catch(() => {});
+
+    await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 30000 });
+  });
+
+  test('user can navigate to Pokemon detail page', async ({ page }) => {
+    // Wait for server to be ready
+    await page.waitForTimeout(2000);
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
+
+    // Wait for loading to complete
+    await page
+      .waitForSelector('text=Loading Pokémon...', {
+        state: 'hidden',
+        timeout: 10000,
       })
       .catch(() => {});
 
@@ -116,22 +96,24 @@ test.describe('Pokemon Gallery', () => {
 
     await bulbasaurCard.click();
 
-    await expect(page).toHaveURL(/\/pokemon\/\d+/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/pokemon\/\d+/);
 
-    await expect(page.getByText('bulbasaur', { exact: false })).toBeVisible({
-      timeout: 15000,
-    });
+    await expect(page.getByText('bulbasaur', { exact: false })).toBeVisible();
   });
 
   test('displays Pokemon image', async ({ page }) => {
-    // Navegar a la página de forma robusta
-    await navigateToHome(page);
+    // Wait for server to be ready
+    await page.waitForTimeout(2000);
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
       .waitForSelector('text=Loading Pokémon...', {
         state: 'hidden',
-        timeout: 15000,
+        timeout: 10000,
       })
       .catch(() => {});
 
@@ -145,36 +127,44 @@ test.describe('Pokemon Gallery', () => {
     await expect(imageLocator).toBeVisible({ timeout: 30000 });
 
     // Wait for image to have loaded (check that it has a src)
-    await expect(imageLocator).toHaveAttribute('src', /.+/, { timeout: 15000 });
+    await expect(imageLocator).toHaveAttribute('src', /.+/, { timeout: 10000 });
   });
 
   test('displays formatted Pokemon ID', async ({ page }) => {
-    // Navegar a la página de forma robusta
-    await navigateToHome(page);
+    // Wait for server to be ready
+    await page.waitForTimeout(2000);
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
       .waitForSelector('text=Loading Pokémon...', {
         state: 'hidden',
-        timeout: 15000,
+        timeout: 10000,
       })
       .catch(() => {});
 
     await expect(page.getByText('bulbasaur')).toBeVisible({ timeout: 30000 });
 
     const pokemonId = page.getByText('#001');
-    await expect(pokemonId).toBeVisible({ timeout: 10000 });
+    await expect(pokemonId).toBeVisible();
   });
 
   test('Pokemon card has hover effect', async ({ page }) => {
-    // Navegar a la página de forma robusta
-    await navigateToHome(page);
+    // Wait for server to be ready
+    await page.waitForTimeout(2000);
+    await page.goto('http://localhost:3000/', {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
 
     // Wait for loading to complete
     await page
       .waitForSelector('text=Loading Pokémon...', {
         state: 'hidden',
-        timeout: 15000,
+        timeout: 10000,
       })
       .catch(() => {});
 
@@ -182,7 +172,7 @@ test.describe('Pokemon Gallery', () => {
 
     const bulbasaurCard = page.locator('.cursor-pointer').first();
 
-    await expect(bulbasaurCard).toBeVisible({ timeout: 10000 });
+    await expect(bulbasaurCard).toBeVisible();
     await bulbasaurCard.hover();
   });
 });
