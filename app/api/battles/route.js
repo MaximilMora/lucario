@@ -325,8 +325,7 @@ export async function POST(request) {
       }
       const resolvedPlayer1UserId =
         player1_user_id || player1UserId || user_id || clerkUserId;
-      const resolvedPlayer1Username =
-        player1_username || player1Username;
+      const resolvedPlayer1Username = player1_username || player1Username;
       const resolvedPlayer2UserId = player2_user_id || player2UserId || 'ai';
       const resolvedPlayer2Username =
         player2_username || player2Username || 'AI Opponent';
