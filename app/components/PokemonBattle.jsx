@@ -36,6 +36,17 @@ export default function PokemonBattle({
       setLoading(true);
       setError(null);
 
+      let username = null;
+      if (isLoaded && user) {
+        username =
+          user.username ||
+          user.firstName ||
+          (user.primaryEmailAddress?.emailAddress
+            ? user.primaryEmailAddress.emailAddress.split('@')[0]
+            : null) ||
+          'Player';
+      }
+
       const response = await fetch('/api/battle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,6 +54,7 @@ export default function PokemonBattle({
           action: 'init',
           playerPokemonId,
           opponentPokemonId,
+          username,
         }),
       });
 
@@ -66,7 +78,16 @@ export default function PokemonBattle({
   // Función para guardar la batalla en Supabase
   const saveBattleToDatabase = async (finalBattleState) => {
     try {
-      const { player, opponent, battleStatus, messages } = finalBattleState;
+      const { player, opponent, battleStatus, messages, battleId, startedAt } =
+        finalBattleState;
+      const resolvedPlayerId = playerPokemonId ?? player?.pokemon?.id;
+      const resolvedOpponentId = opponentPokemonId ?? opponent?.pokemon?.id;
+      const resolvedPlayerName =
+        player?.pokemon?.name ||
+        (resolvedPlayerId ? `${resolvedPlayerId}` : '');
+      const resolvedOpponentName =
+        opponent?.pokemon?.name ||
+        (resolvedOpponentId ? `${resolvedOpponentId}` : '');
 
       // Calcular duración (aproximada)
       const durationSeconds = battleStartTimeRef.current
@@ -88,7 +109,7 @@ export default function PokemonBattle({
           'Guest';
       }
 
-      await fetch('/api/battles', {
+      const response = await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -98,7 +119,7 @@ export default function PokemonBattle({
           player1PokemonId: playerPokemonId,
           player1PokemonName: player.pokemon?.name || '',
           // Jugador 2 (AI oponente por ahora)
-          player2UserId: null, // AI no tiene user_id
+          player2UserId: 'ai', // AI tiene user_id fijo
           player2Username: 'AI Opponent',
           player2PokemonId: opponentPokemonId,
           player2PokemonName: opponent.pokemon?.name || '',
@@ -113,9 +134,21 @@ export default function PokemonBattle({
           finishedAt: new Date().toISOString(),
         }),
       });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        console.error('Error guardando batalla en /api/battles', {
+          status: response.status,
+          errorPayload,
+        });
+      }
     } catch (error) {
       // No bloqueamos la UI si falla guardar en BD
       console.error('Error saving battle to database:', error);
+      // Log adicional para debugging
+      if (error instanceof ReferenceError) {
+        console.error('ReferenceError details:', error.message, error.stack);
+      }
     }
   };
 

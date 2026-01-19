@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import PokemonGallery from './PokemonGallery';
-import PokechatAi from './PokechatAi';
 import {
   SignInButton,
   SignUpButton,
@@ -61,13 +60,11 @@ export default function HomePage() {
           {skipAuth ? (
             <>
               <PokemonGallery key="pokemon-gallery" />
-              <PokechatAi key="pokechat-ai" />
             </>
           ) : (
             <>
               <SignedIn>
                 <PokemonGallery key="pokemon-gallery" />
-                <PokechatAi key="pokechat-ai" />
               </SignedIn>
               <SignedOut>
                 <div className="text-center py-20">
