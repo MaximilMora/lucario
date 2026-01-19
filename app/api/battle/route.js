@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import {
   calculateDamage,
   calculateMaxHP,
@@ -32,12 +33,34 @@ async function createBattleRecord({
   opponentPokemonId,
   playerPokemonName,
   opponentPokemonName,
+  userId,
+  username,
 }) {
   try {
     const nowIso = new Date().toISOString();
+
+    // Si no hay userId, usar un valor por defecto
+    if (!userId) {
+      console.warn('No user_id provided for battle creation');
+      userId = 'guest';
+    }
+
+    // Si no hay username, usar un valor por defecto
+    if (!username) {
+      username = userId === 'guest' ? 'Guest' : 'Player';
+    }
+
+    // Player2 es siempre la IA/bot en modo single-player
+    const player2UserId = 'ai';
+    const player2Username = 'AI Opponent';
+
     const { data, error } = await supabaseServer
       .from('battles')
       .insert({
+        player1_user_id: userId,
+        player1_username: username,
+        player2_user_id: player2UserId,
+        player2_username: player2Username,
         player1_pokemon_id: playerPokemonId,
         player2_pokemon_id: opponentPokemonId,
         player1_pokemon_name: playerPokemonName,
@@ -111,6 +134,7 @@ async function finalizeBattle({ battleId, status, winnerSide, totalTurns }) {
  */
 export async function POST(request) {
   try {
+    const { userId: clerkUserId } = auth();
     const body = await request.json();
     const { action } = body;
 
@@ -123,7 +147,7 @@ export async function POST(request) {
 
     // Inicializar combate
     if (action === 'init') {
-      const { playerPokemonId, opponentPokemonId } = body;
+      const { playerPokemonId, opponentPokemonId, username } = body;
 
       if (!playerPokemonId || !opponentPokemonId) {
         return NextResponse.json(
@@ -160,12 +184,15 @@ export async function POST(request) {
         opponentPokemonId,
         playerPokemonName: playerData.name,
         opponentPokemonName: opponentData.name,
+        userId: clerkUserId || null,
+        username: username || null,
       });
 
       // Estado inicial del combate
       const initialState = {
         battleId,
         startedAt,
+        playerUserId: clerkUserId || 'guest', // Guardar user_id para usar en turnos
         turnNumber: 0,
         player: {
           pokemon: playerData,
@@ -230,6 +257,7 @@ export async function POST(request) {
       const messages = [...battleState.messages];
       const newBattleState = { ...battleState };
       const battleId = battleState.battleId;
+      const playerUserId = battleState.playerUserId || clerkUserId || 'guest';
       let nextTurnNumber = Number.isFinite(battleState.turnNumber)
         ? battleState.turnNumber
         : 0;
@@ -259,7 +287,7 @@ export async function POST(request) {
       await logBattleTurn({
         battle_id: battleId,
         turn_number: nextTurnNumber,
-        player_user_id: null,
+        player_user_id: playerUserId,
         player_side: 'player1',
         action_type: 'attack',
         attack_id: selectedAttack.id ?? attackId ?? null,
@@ -320,10 +348,11 @@ export async function POST(request) {
       );
 
       nextTurnNumber += 1;
+      // Para player2 (IA), usar 'ai' como user_id
       await logBattleTurn({
         battle_id: battleId,
         turn_number: nextTurnNumber,
-        player_user_id: null,
+        player_user_id: 'ai',
         player_side: 'player2',
         action_type: 'attack',
         attack_id: opponentAttack.id ?? null,

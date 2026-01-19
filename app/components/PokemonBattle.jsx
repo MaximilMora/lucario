@@ -34,6 +34,17 @@ export default function PokemonBattle({
       setLoading(true);
       setError(null);
 
+      let username = null;
+      if (isLoaded && user) {
+        username =
+          user.username ||
+          user.firstName ||
+          (user.primaryEmailAddress?.emailAddress
+            ? user.primaryEmailAddress.emailAddress.split('@')[0]
+            : null) ||
+          'Player';
+      }
+
       const response = await fetch('/api/battle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,6 +52,7 @@ export default function PokemonBattle({
           action: 'init',
           playerPokemonId,
           opponentPokemonId,
+          username,
         }),
       });
 
@@ -136,6 +148,10 @@ export default function PokemonBattle({
     } catch (error) {
       // No bloqueamos la UI si falla guardar en BD
       console.error('Error saving battle to database:', error);
+      // Log adicional para debugging
+      if (error instanceof ReferenceError) {
+        console.error('ReferenceError details:', error.message, error.stack);
+      }
     }
   };
 

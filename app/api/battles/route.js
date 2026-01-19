@@ -64,6 +64,45 @@ async function updateUserStats({
     nextCurrentWinStreak
   );
 
+  // Calcular el Pokémon más usado contando todas las batallas del usuario
+  let mostUsedPokemonId = existing?.most_used_pokemon_id || null;
+  let mostUsedPokemonName = existing?.most_used_pokemon_name || null;
+
+  if (playerPokemonId) {
+    try {
+      // Contar cuántas veces se ha usado este Pokémon
+      const { data: battlesData } = await supabaseServer
+        .from('battles')
+        .select('player1_pokemon_id, player1_pokemon_name')
+        .eq('player1_user_id', userId)
+        .eq('player1_pokemon_id', playerPokemonId);
+
+      const currentPokemonCount = battlesData?.length || 0;
+
+      // Contar el Pokémon actualmente más usado
+      const { data: currentMostUsed } = await supabaseServer
+        .from('battles')
+        .select('player1_pokemon_id, player1_pokemon_name')
+        .eq('player1_user_id', userId)
+        .eq('player1_pokemon_id', existing?.most_used_pokemon_id || 0);
+
+      const currentMostUsedCount = currentMostUsed?.length || 0;
+
+      // Si el Pokémon actual tiene más o igual uso, actualizar
+      if (currentPokemonCount >= currentMostUsedCount) {
+        mostUsedPokemonId = playerPokemonId;
+        mostUsedPokemonName = playerPokemonName;
+      }
+    } catch (error) {
+      console.error('Error calculating most used pokemon:', error);
+      // En caso de error, usar el último Pokémon usado como fallback
+      mostUsedPokemonId =
+        playerPokemonId || existing?.most_used_pokemon_id || null;
+      mostUsedPokemonName =
+        playerPokemonName || existing?.most_used_pokemon_name || null;
+    }
+  }
+
   const payload = {
     user_id: userId,
     total_battles: nextTotalBattles,
@@ -72,10 +111,8 @@ async function updateUserStats({
     draws: nextDraws,
     current_win_streak: nextCurrentWinStreak,
     best_win_streak: nextBestWinStreak,
-    most_used_pokemon_id:
-      playerPokemonId || existing?.most_used_pokemon_id || null,
-    most_used_pokemon_name:
-      playerPokemonName || existing?.most_used_pokemon_name || null,
+    most_used_pokemon_id: mostUsedPokemonId,
+    most_used_pokemon_name: mostUsedPokemonName,
     first_battle_at: existing?.first_battle_at || nowIso,
     last_battle_at: nowIso,
     updated_at: nowIso,
@@ -88,6 +125,16 @@ async function updateUserStats({
   if (upsertError) {
     console.error('Supabase ranking upsert error:', upsertError);
   }
+}
+
+// Función para calcular el cambio de rating ELO
+function calculateEloChange(playerRating, opponentRating, result) {
+  // result: 1 = win, 0 = loss, 0.5 = draw
+  const K = 32; // Factor de cambio (puede ajustarse según nivel)
+  const expectedScore =
+    1 / (1 + Math.pow(10, (opponentRating - playerRating) / 400));
+  const ratingChange = Math.round(K * (result - expectedScore));
+  return ratingChange;
 }
 
 async function updateRanking({ userId, username, winnerSide, finishedAt }) {
@@ -109,14 +156,47 @@ async function updateRanking({ userId, username, winnerSide, finishedAt }) {
 
   const isWin = winnerSide === 'player1';
   const isLoss = winnerSide === 'player2';
+  const isDraw = winnerSide === 'draw';
 
   const nextRankedBattles = (existing?.ranked_battles || 0) + 1;
   const nextRankedWins = (existing?.ranked_wins || 0) + (isWin ? 1 : 0);
   const nextRankedLosses = (existing?.ranked_losses || 0) + (isLoss ? 1 : 0);
 
+  // Calcular rating ELO
+  const currentRating = existing?.rating || 1000;
+  // Rating del oponente (IA): usar rating promedio o fijo (1000)
+  const opponentRating = 1000;
+
+  // Determinar resultado: 1 = win, 0 = loss, 0.5 = draw
+  let result;
+  if (isWin) {
+    result = 1;
+  } else if (isLoss) {
+    result = 0;
+  } else {
+    result = 0.5;
+  }
+
+  const ratingChange = calculateEloChange(
+    currentRating,
+    opponentRating,
+    result
+  );
+  const newRating = currentRating + ratingChange;
+  const newPeakRating = Math.max(existing?.peak_rating || 1000, newRating);
+
+  // Validar que username no sea null (requerido por el esquema)
+  const resolvedUsername = username || existing?.username || 'Player';
+  if (!resolvedUsername) {
+    console.error('Username is required for ranking');
+    return;
+  }
+
   const payload = {
     user_id: userId,
-    username: username || existing?.username || null,
+    username: resolvedUsername,
+    rating: newRating,
+    peak_rating: newPeakRating,
     ranked_battles: nextRankedBattles,
     ranked_wins: nextRankedWins,
     ranked_losses: nextRankedLosses,
@@ -182,7 +262,7 @@ export async function POST(request) {
 
     const resolvedPlayer1Name = fallbackPlayerName;
     const resolvedPlayer2Name = fallbackOpponentName;
-    const resolvedStatus = status || battleStatus;
+    const resolvedStatus = status || battleStatus || 'active';
     const resolvedUserId = player1_user_id || user_id || clerkUserId || null;
 
     // Mapear battleStatus a winner_side si no viene definido
@@ -291,6 +371,25 @@ export async function POST(request) {
       !resolvedPlayer2Name ||
       !resolvedStatus
     ) {
+      console.error('Missing required fields:', {
+        resolvedPlayer1Id,
+        resolvedPlayer2Id,
+        resolvedPlayer1Name,
+        resolvedPlayer2Name,
+        resolvedStatus,
+        receivedBody: {
+          playerPokemonId,
+          opponentPokemonId,
+          playerPokemonName,
+          opponentPokemonName,
+          battleStatus,
+          status,
+          player1_pokemon_id,
+          player2_pokemon_id,
+          player1_pokemon_name,
+          player2_pokemon_name,
+        },
+      });
       return NextResponse.json(
         {
           error: 'Missing required fields',
@@ -301,6 +400,13 @@ export async function POST(request) {
             'player2_pokemon_name',
             'status',
           ],
+          received: {
+            player1_pokemon_id: resolvedPlayer1Id,
+            player2_pokemon_id: resolvedPlayer2Id,
+            player1_pokemon_name: resolvedPlayer1Name,
+            player2_pokemon_name: resolvedPlayer2Name,
+            status: resolvedStatus,
+          },
         },
         { status: 400 }
       );
