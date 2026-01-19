@@ -103,12 +103,14 @@ const channel = supabase
 ### For Multiplayer Battles
 
 **Matchmaking:**
+
 1. Player 1 joins queue → inserts row with `status: 'waiting'`
 2. Player 1 subscribes to their row via WebSocket
 3. Player 2 joins → server finds Player 1, creates battle, updates both rows to `status: 'matched'`
 4. Both receive update instantly → redirect to battle
 
 **During Battle:**
+
 1. Both players subscribe to `battles` table for their `battle_id`
 2. Player 1 attacks → server updates HP, sets `current_turn: 'player2'`
 3. Player 2 receives update instantly → sees damage, knows it's their turn
@@ -118,21 +120,21 @@ const channel = supabase
 
 ## 3. New Files to Create
 
-| File | Purpose |
-|------|---------|
-| `app/lib/supabaseClient.js` | Client-side Supabase for Realtime subscriptions |
-| `app/api/matchmaking/route.js` | Join/leave queue, match players |
-| `app/api/pvp-battle/route.js` | PvP attack/forfeit actions |
-| `app/components/BattleModeSelector.jsx` | Choose "Battle AI" vs "Battle Player" |
-| `app/components/WaitingLobby.jsx` | Queue waiting screen with cancel button |
-| `app/components/PvPBattle.jsx` | Real-time PvP battle component |
+| File                                    | Purpose                                         |
+| --------------------------------------- | ----------------------------------------------- |
+| `app/lib/supabaseClient.js`             | Client-side Supabase for Realtime subscriptions |
+| `app/api/matchmaking/route.js`          | Join/leave queue, match players                 |
+| `app/api/pvp-battle/route.js`           | PvP attack/forfeit actions                      |
+| `app/components/BattleModeSelector.jsx` | Choose "Battle AI" vs "Battle Player"           |
+| `app/components/WaitingLobby.jsx`       | Queue waiting screen with cancel button         |
+| `app/components/PvPBattle.jsx`          | Real-time PvP battle component                  |
 
 ---
 
 ## 4. Files to Modify
 
-| File | Changes |
-|------|---------|
+| File                               | Changes                                                    |
+| ---------------------------------- | ---------------------------------------------------------- |
 | `app/components/BattleStarter.jsx` | Add mode selection, integrate waiting lobby and PvP battle |
 
 ---
@@ -142,11 +144,13 @@ const channel = supabase
 ### POST `/api/matchmaking`
 
 **Actions:**
+
 - `join` - Add player to queue, try to find match
 - `leave` - Remove player from queue
 - `check` - Check if player has been matched
 
 **Join Flow:**
+
 1. Check if user already in queue
 2. Look for another waiting player
 3. If found: create battle, update both queue entries to `matched`
@@ -155,10 +159,12 @@ const channel = supabase
 ### POST `/api/pvp-battle`
 
 **Actions:**
+
 - `attack` - Submit attack (validates it's player's turn)
 - `forfeit` - Surrender the battle
 
 **Attack Flow:**
+
 1. Fetch battle from DB
 2. Verify it's this player's turn
 3. Calculate damage, update HP
@@ -182,6 +188,7 @@ const channel = supabase
 ## 7. Environment Variables Required
 
 Add to `.env`:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
