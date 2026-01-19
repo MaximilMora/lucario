@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 import BattleHPBar from './BattleHPBar';
 import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
@@ -15,6 +16,7 @@ export default function PokemonBattle({
   opponentPokemonId,
   onBattleEnd,
 }) {
+  const { user, isLoaded } = useUser();
   const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -60,21 +62,77 @@ export default function PokemonBattle({
   // Función para guardar la batalla en Supabase
   const saveBattleToDatabase = async (finalBattleState) => {
     try {
-      const { player, opponent, battleStatus, messages } = finalBattleState;
+      const { player, opponent, battleStatus, messages, battleId, startedAt } =
+        finalBattleState;
+      const resolvedPlayerId = playerPokemonId ?? player?.pokemon?.id;
+      const resolvedOpponentId = opponentPokemonId ?? opponent?.pokemon?.id;
+      const resolvedPlayerName =
+        player?.pokemon?.name ||
+        (resolvedPlayerId ? `${resolvedPlayerId}` : '');
+      const resolvedOpponentName =
+        opponent?.pokemon?.name ||
+        (resolvedOpponentId ? `${resolvedOpponentId}` : '');
 
-      await fetch('/api/battles', {
+      if (
+        !resolvedPlayerId ||
+        !resolvedOpponentId ||
+        !resolvedPlayerName ||
+        !resolvedOpponentName ||
+        !battleStatus
+      ) {
+        console.warn('Datos incompletos para guardar batalla en Supabase', {
+          resolvedPlayerId,
+          resolvedOpponentId,
+          resolvedPlayerName,
+          resolvedOpponentName,
+          battleStatus,
+        });
+        return;
+      }
+
+      const totalTurns =
+        Array.isArray(messages) && messages.length > 0
+          ? Math.max(1, Math.floor(messages.length / 2))
+          : 0;
+
+      let resolvedUserId = null;
+      let resolvedUsername = null;
+
+      if (isLoaded && user) {
+        resolvedUserId = user.id || null;
+        resolvedUsername =
+          user.username ||
+          user.firstName ||
+          (user.primaryEmailAddress?.emailAddress
+            ? user.primaryEmailAddress.emailAddress.split('@')[0]
+            : null);
+      }
+
+      const response = await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          playerPokemonId: playerPokemonId,
-          opponentPokemonId: opponentPokemonId,
-          playerPokemonName: player.pokemon?.name || '',
-          opponentPokemonName: opponent.pokemon?.name || '',
-          battleStatus: battleStatus,
-          messages: messages || [],
-          // user_id: null, // Opcional: puedes obtenerlo de Clerk si lo implementas
+          battle_id: battleId || null,
+          player1_pokemon_id: resolvedPlayerId,
+          player2_pokemon_id: resolvedOpponentId,
+          player1_pokemon_name: resolvedPlayerName,
+          player2_pokemon_name: resolvedOpponentName,
+          player1_user_id: resolvedUserId,
+          player1_username: resolvedUsername,
+          status: battleStatus,
+          battle_log: messages ? { messages } : null,
+          total_turns: totalTurns,
+          started_at: startedAt || null,
         }),
       });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        console.error('Error guardando batalla en /api/battles', {
+          status: response.status,
+          errorPayload,
+        });
+      }
     } catch (error) {
       // No bloqueamos la UI si falla guardar en BD
       console.error('Error saving battle to database:', error);

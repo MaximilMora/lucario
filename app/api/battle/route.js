@@ -7,6 +7,7 @@ import {
   getDefenseStat,
   getHPStat,
 } from '../../utils/battleUtils';
+import { supabaseServer } from '../../lib/supabaseServerClient';
 
 // Helper function to fetch Pokemon data from PokeAPI
 async function fetchPokemonData(pokemonNameOrId) {
@@ -25,6 +26,84 @@ async function fetchPokemonData(pokemonNameOrId) {
 }
 
 export const maxDuration = 30;
+
+async function createBattleRecord({
+  playerPokemonId,
+  opponentPokemonId,
+  playerPokemonName,
+  opponentPokemonName,
+}) {
+  try {
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supabaseServer
+      .from('battles')
+      .insert({
+        player1_pokemon_id: playerPokemonId,
+        player2_pokemon_id: opponentPokemonId,
+        player1_pokemon_name: playerPokemonName,
+        player2_pokemon_name: opponentPokemonName,
+        status: 'active',
+        started_at: nowIso,
+        finished_at: null,
+      })
+      .select('id, started_at')
+      .single();
+
+    if (error) {
+      console.error('Supabase create battle error:', error);
+      return { battleId: null, startedAt: nowIso };
+    }
+
+    return {
+      battleId: data?.id || null,
+      startedAt: data?.started_at || nowIso,
+    };
+  } catch (error) {
+    console.error('Supabase create battle exception:', error);
+    return { battleId: null, startedAt: new Date().toISOString() };
+  }
+}
+
+async function logBattleTurn(turn) {
+  try {
+    if (!turn?.battle_id) {
+      return;
+    }
+
+    const { error } = await supabaseServer.from('battle_turns').insert(turn);
+
+    if (error) {
+      console.error('Supabase insert battle_turns error:', error);
+    }
+  } catch (error) {
+    console.error('Supabase insert battle_turns exception:', error);
+  }
+}
+
+async function finalizeBattle({ battleId, status, winnerSide, totalTurns }) {
+  try {
+    if (!battleId) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabaseServer
+      .from('battles')
+      .update({
+        status,
+        winner_side: winnerSide,
+        total_turns: Number.isFinite(totalTurns) ? totalTurns : 0,
+        finished_at: nowIso,
+      })
+      .eq('id', battleId);
+
+    if (error) {
+      console.error('Supabase finalize battle error:', error);
+    }
+  } catch (error) {
+    console.error('Supabase finalize battle exception:', error);
+  }
+}
 
 /**
  * POST /api/battle
@@ -76,8 +155,18 @@ export async function POST(request) {
       const playerAttacks = getPokemonAttacks(playerData);
       const opponentAttacks = getPokemonAttacks(opponentData);
 
+      const { battleId, startedAt } = await createBattleRecord({
+        playerPokemonId,
+        opponentPokemonId,
+        playerPokemonName: playerData.name,
+        opponentPokemonName: opponentData.name,
+      });
+
       // Estado inicial del combate
       const initialState = {
+        battleId,
+        startedAt,
+        turnNumber: 0,
         player: {
           pokemon: playerData,
           currentHP: playerMaxHP,
@@ -140,6 +229,11 @@ export async function POST(request) {
 
       const messages = [...battleState.messages];
       const newBattleState = { ...battleState };
+      const battleId = battleState.battleId;
+      let nextTurnNumber = Number.isFinite(battleState.turnNumber)
+        ? battleState.turnNumber
+        : 0;
+      const nowIso = new Date().toISOString();
 
       // Ataque del jugador
       const playerAttack = getAttackStat(player.pokemon);
@@ -150,14 +244,34 @@ export async function POST(request) {
         selectedAttack.power
       );
 
+      const opponentHpBefore = opponent.currentHP;
       messages.push(`${player.pokemon.name} usó ${selectedAttack.name}!`);
       newBattleState.opponent.currentHP = Math.max(
         0,
         opponent.currentHP - playerDamage
       );
+      const opponentHpAfter = newBattleState.opponent.currentHP;
       messages.push(
         `El rival ${opponent.pokemon.name} recibió ${playerDamage} de daño.`
       );
+
+      nextTurnNumber += 1;
+      await logBattleTurn({
+        battle_id: battleId,
+        turn_number: nextTurnNumber,
+        player_user_id: null,
+        player_side: 'player1',
+        action_type: 'attack',
+        attack_id: selectedAttack.id ?? attackId ?? null,
+        attack_name: selectedAttack.name ?? null,
+        damage_dealt: playerDamage,
+        target_hp_before: opponentHpBefore,
+        target_hp_after: opponentHpAfter,
+        player1_hp_after: player.currentHP,
+        player2_hp_after: opponentHpAfter,
+        message: `${player.pokemon.name} usó ${selectedAttack.name}!`,
+        executed_at: nowIso,
+      });
 
       // Verificar si el oponente fue derrotado
       if (newBattleState.opponent.currentHP <= 0) {
@@ -165,6 +279,14 @@ export async function POST(request) {
         newBattleState.battleStatus = 'playerWon';
         messages.push(`¡${opponent.pokemon.name} se debilitó!`);
         messages.push(`¡Has ganado el combate!`);
+        newBattleState.turnNumber = nextTurnNumber;
+
+        await finalizeBattle({
+          battleId,
+          status: 'playerWon',
+          winnerSide: 'player1',
+          totalTurns: nextTurnNumber,
+        });
 
         return NextResponse.json({
           success: true,
@@ -184,6 +306,7 @@ export async function POST(request) {
         opponentAttack.power
       );
 
+      const playerHpBefore = player.currentHP;
       messages.push(
         `El rival ${opponent.pokemon.name} usó ${opponentAttack.name}!`
       );
@@ -191,9 +314,28 @@ export async function POST(request) {
         0,
         player.currentHP - opponentDamage
       );
+      const playerHpAfter = newBattleState.player.currentHP;
       messages.push(
         `${player.pokemon.name} recibió ${opponentDamage} de daño.`
       );
+
+      nextTurnNumber += 1;
+      await logBattleTurn({
+        battle_id: battleId,
+        turn_number: nextTurnNumber,
+        player_user_id: null,
+        player_side: 'player2',
+        action_type: 'attack',
+        attack_id: opponentAttack.id ?? null,
+        attack_name: opponentAttack.name ?? null,
+        damage_dealt: opponentDamage,
+        target_hp_before: playerHpBefore,
+        target_hp_after: playerHpAfter,
+        player1_hp_after: playerHpAfter,
+        player2_hp_after: opponent.currentHP,
+        message: `El rival ${opponent.pokemon.name} usó ${opponentAttack.name}!`,
+        executed_at: nowIso,
+      });
 
       // Verificar si el jugador fue derrotado
       if (newBattleState.player.currentHP <= 0) {
@@ -201,6 +343,14 @@ export async function POST(request) {
         newBattleState.battleStatus = 'opponentWon';
         messages.push(`¡${player.pokemon.name} se debilitó!`);
         messages.push(`Has perdido el combate...`);
+        newBattleState.turnNumber = nextTurnNumber;
+
+        await finalizeBattle({
+          battleId,
+          status: 'opponentWon',
+          winnerSide: 'player2',
+          totalTurns: nextTurnNumber,
+        });
 
         return NextResponse.json({
           success: true,
@@ -211,6 +361,7 @@ export async function POST(request) {
 
       newBattleState.messages = messages;
       newBattleState.turn = 'player'; // Siguiente turno del jugador
+      newBattleState.turnNumber = nextTurnNumber;
 
       return NextResponse.json({
         success: true,
