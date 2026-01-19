@@ -109,7 +109,7 @@ export default function PokemonBattle({
           'Guest';
       }
 
-      await fetch('/api/battles', {
+      const response = await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export default function PokemonBattle({
           player1PokemonId: playerPokemonId,
           player1PokemonName: player.pokemon?.name || '',
           // Jugador 2 (AI oponente por ahora)
-          player2UserId: null, // AI no tiene user_id
+          player2UserId: 'ai', // AI tiene user_id fijo
           player2Username: 'AI Opponent',
           player2PokemonId: opponentPokemonId,
           player2PokemonName: opponent.pokemon?.name || '',

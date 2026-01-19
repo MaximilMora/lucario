@@ -222,6 +222,7 @@ export async function POST(request) {
     const { userId: clerkUserId } = auth();
     const body = await request.json();
     const {
+      // Nombres antiguos (compatibilidad)
       playerPokemonId,
       opponentPokemonId,
       playerPokemonName,
@@ -229,6 +230,7 @@ export async function POST(request) {
       battleStatus,
       messages,
       user_id,
+      // Nombres nuevos (snake_case)
       battle_id,
       player1_user_id,
       player1_username,
@@ -246,10 +248,25 @@ export async function POST(request) {
       battle_log,
       started_at,
       finished_at,
+      // Nombres en camelCase (del cliente actualizado)
+      player1UserId,
+      player1Username,
+      player2UserId,
+      player2Username,
+      player1PokemonId,
+      player1PokemonName,
+      player2PokemonId,
+      player2PokemonName,
+      totalTurns,
+      durationSeconds,
+      startedAt,
+      finishedAt,
     } = body;
 
-    const resolvedPlayer1Id = player1_pokemon_id ?? playerPokemonId;
-    const resolvedPlayer2Id = player2_pokemon_id ?? opponentPokemonId;
+    const resolvedPlayer1Id =
+      player1_pokemon_id ?? player1PokemonId ?? playerPokemonId;
+    const resolvedPlayer2Id =
+      player2_pokemon_id ?? player2PokemonId ?? opponentPokemonId;
 
     const [fallbackPlayerName, fallbackOpponentName] = await Promise.all([
       player1_pokemon_name || playerPokemonName
@@ -263,7 +280,8 @@ export async function POST(request) {
     const resolvedPlayer1Name = fallbackPlayerName;
     const resolvedPlayer2Name = fallbackOpponentName;
     const resolvedStatus = status || battleStatus || 'active';
-    const resolvedUserId = player1_user_id || user_id || clerkUserId || null;
+    const resolvedUserId =
+      player1_user_id || player1UserId || user_id || clerkUserId || null;
 
     // Mapear battleStatus a winner_side si no viene definido
     let resolvedWinnerSide = winner_side;
@@ -285,11 +303,13 @@ export async function POST(request) {
         finished_at: finished_at || nowIso,
       };
 
-      if (Number.isFinite(total_turns)) {
-        updatePayload.total_turns = total_turns;
+      const resolvedTotalTurns = total_turns ?? totalTurns;
+      const resolvedDurationSeconds = duration_seconds ?? durationSeconds;
+      if (Number.isFinite(resolvedTotalTurns)) {
+        updatePayload.total_turns = resolvedTotalTurns;
       }
-      if (Number.isFinite(duration_seconds)) {
-        updatePayload.duration_seconds = duration_seconds;
+      if (Number.isFinite(resolvedDurationSeconds)) {
+        updatePayload.duration_seconds = resolvedDurationSeconds;
       }
       if (resolvedPlayer1Id) {
         updatePayload.player1_pokemon_id = resolvedPlayer1Id;
@@ -303,17 +323,25 @@ export async function POST(request) {
       if (resolvedPlayer2Name) {
         updatePayload.player2_pokemon_name = resolvedPlayer2Name;
       }
-      if (player1_user_id || user_id) {
-        updatePayload.player1_user_id = player1_user_id || user_id;
+      const resolvedPlayer1UserId =
+        player1_user_id || player1UserId || user_id || clerkUserId;
+      const resolvedPlayer1Username =
+        player1_username || player1Username;
+      const resolvedPlayer2UserId = player2_user_id || player2UserId || 'ai';
+      const resolvedPlayer2Username =
+        player2_username || player2Username || 'AI Opponent';
+
+      if (resolvedPlayer1UserId) {
+        updatePayload.player1_user_id = resolvedPlayer1UserId;
       }
-      if (player1_username) {
-        updatePayload.player1_username = player1_username;
+      if (resolvedPlayer1Username) {
+        updatePayload.player1_username = resolvedPlayer1Username;
       }
-      if (player2_user_id) {
-        updatePayload.player2_user_id = player2_user_id;
+      if (resolvedPlayer2UserId) {
+        updatePayload.player2_user_id = resolvedPlayer2UserId;
       }
-      if (player2_username) {
-        updatePayload.player2_username = player2_username;
+      if (resolvedPlayer2Username) {
+        updatePayload.player2_username = resolvedPlayer2Username;
       }
       if (winner_user_id) {
         updatePayload.winner_user_id = winner_user_id;
@@ -322,8 +350,13 @@ export async function POST(request) {
         updatePayload.battle_log =
           battle_log || (messages ? { messages } : null);
       }
-      if (started_at) {
-        updatePayload.started_at = started_at;
+      const resolvedStartedAt = started_at || startedAt;
+      const resolvedFinishedAt = finished_at || finishedAt;
+      if (resolvedStartedAt) {
+        updatePayload.started_at = resolvedStartedAt;
+      }
+      if (resolvedFinishedAt) {
+        updatePayload.finished_at = resolvedFinishedAt;
       }
 
       const { data, error } = await supabaseServer
@@ -414,26 +447,43 @@ export async function POST(request) {
 
     const nowIso = new Date().toISOString();
 
+    // Resolver valores para INSERT
+    const resolvedPlayer1UserIdForInsert =
+      player1_user_id || player1UserId || resolvedUserId || 'guest';
+    const resolvedPlayer1UsernameForInsert =
+      player1_username || player1Username || 'Player';
+    const resolvedPlayer2UserIdForInsert =
+      player2_user_id || player2UserId || 'ai';
+    const resolvedPlayer2UsernameForInsert =
+      player2_username || player2Username || 'AI Opponent';
+    const resolvedTotalTurnsForInsert = total_turns ?? totalTurns ?? 0;
+    const resolvedDurationSecondsForInsert =
+      duration_seconds ?? durationSeconds ?? 0;
+    const resolvedStartedAtForInsert = started_at || startedAt || nowIso;
+    const resolvedFinishedAtForInsert = finished_at || finishedAt || nowIso;
+
     // Insertar en Supabase usando el esquema actual
     const { data, error } = await supabaseServer.from('battles').insert({
-      player1_user_id: resolvedUserId,
-      player1_username: player1_username || null,
-      player2_user_id: player2_user_id || null,
-      player2_username: player2_username || null,
+      player1_user_id: resolvedPlayer1UserIdForInsert,
+      player1_username: resolvedPlayer1UsernameForInsert,
+      player2_user_id: resolvedPlayer2UserIdForInsert,
+      player2_username: resolvedPlayer2UsernameForInsert,
       player1_pokemon_id: resolvedPlayer1Id,
       player1_pokemon_name: resolvedPlayer1Name,
       player2_pokemon_id: resolvedPlayer2Id,
       player2_pokemon_name: resolvedPlayer2Name,
       winner_user_id: winner_user_id || null,
       winner_side: resolvedWinnerSide || null,
-      total_turns: Number.isFinite(total_turns) ? total_turns : 0,
-      duration_seconds: Number.isFinite(duration_seconds)
-        ? duration_seconds
+      total_turns: Number.isFinite(resolvedTotalTurnsForInsert)
+        ? resolvedTotalTurnsForInsert
+        : 0,
+      duration_seconds: Number.isFinite(resolvedDurationSecondsForInsert)
+        ? resolvedDurationSecondsForInsert
         : 0,
       status: resolvedStatus,
       battle_log: battle_log || (messages ? { messages } : null),
-      started_at: started_at || nowIso,
-      finished_at: finished_at || nowIso,
+      started_at: resolvedStartedAtForInsert,
+      finished_at: resolvedFinishedAtForInsert,
     });
 
     if (error) {
