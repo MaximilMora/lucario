@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
@@ -16,11 +16,13 @@ export default function PokemonBattle({
   opponentPokemonId,
   onBattleEnd,
 }) {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useUser(); // Obtener usuario de Clerk
   const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const battleStartTimeRef = useRef(null);
+  const turnCountRef = useRef(0);
 
   // Inicializar combate
   useEffect(() => {
@@ -63,6 +65,8 @@ export default function PokemonBattle({
       }
 
       setBattleState(data.battleState);
+      battleStartTimeRef.current = Date.now(); // Guardar tiempo de inicio
+      turnCountRef.current = 0; // Resetear contador de turnos
     } catch (err) {
       setError(err.message);
       console.error('Error initializing battle:', err);
@@ -85,56 +89,49 @@ export default function PokemonBattle({
         opponent?.pokemon?.name ||
         (resolvedOpponentId ? `${resolvedOpponentId}` : '');
 
-      if (
-        !resolvedPlayerId ||
-        !resolvedOpponentId ||
-        !resolvedPlayerName ||
-        !resolvedOpponentName ||
-        !battleStatus
-      ) {
-        console.warn('Datos incompletos para guardar batalla en Supabase', {
-          resolvedPlayerId,
-          resolvedOpponentId,
-          resolvedPlayerName,
-          resolvedOpponentName,
-          battleStatus,
-        });
-        return;
-      }
+      // Calcular duración (aproximada)
+      const durationSeconds = battleStartTimeRef.current
+        ? Math.floor((Date.now() - battleStartTimeRef.current) / 1000)
+        : 0;
 
-      const totalTurns =
-        Array.isArray(messages) && messages.length > 0
-          ? Math.max(1, Math.floor(messages.length / 2))
-          : 0;
-
-      let resolvedUserId = null;
-      let resolvedUsername = null;
+      // Obtener username del usuario de forma segura
+      let username = 'Guest';
+      let userId = 'guest';
 
       if (isLoaded && user) {
-        resolvedUserId = user.id || null;
-        resolvedUsername =
+        userId = user.id || 'guest';
+        username =
           user.username ||
           user.firstName ||
           (user.primaryEmailAddress?.emailAddress
             ? user.primaryEmailAddress.emailAddress.split('@')[0]
-            : null);
+            : null) ||
+          'Guest';
       }
 
-      const response = await fetch('/api/battles', {
+      await fetch('/api/battles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          battle_id: battleId || null,
-          player1_pokemon_id: resolvedPlayerId,
-          player2_pokemon_id: resolvedOpponentId,
-          player1_pokemon_name: resolvedPlayerName,
-          player2_pokemon_name: resolvedOpponentName,
-          player1_user_id: resolvedUserId,
-          player1_username: resolvedUsername,
-          status: battleStatus,
-          battle_log: messages ? { messages } : null,
-          total_turns: totalTurns,
-          started_at: startedAt || null,
+          // Jugador 1 (usuario actual)
+          player1UserId: userId,
+          player1Username: username,
+          player1PokemonId: playerPokemonId,
+          player1PokemonName: player.pokemon?.name || '',
+          // Jugador 2 (AI oponente por ahora)
+          player2UserId: null, // AI no tiene user_id
+          player2Username: 'AI Opponent',
+          player2PokemonId: opponentPokemonId,
+          player2PokemonName: opponent.pokemon?.name || '',
+          // Estado de la batalla
+          battleStatus: battleStatus,
+          totalTurns: turnCountRef.current,
+          durationSeconds: durationSeconds,
+          messages: messages || [],
+          startedAt: battleStartTimeRef.current
+            ? new Date(battleStartTimeRef.current).toISOString()
+            : new Date().toISOString(),
+          finishedAt: new Date().toISOString(),
         }),
       });
 
@@ -183,6 +180,7 @@ export default function PokemonBattle({
       setTimeout(() => {
         setBattleState(data.battleState);
         setIsAttacking(false);
+        turnCountRef.current += 1; // Incrementar contador de turnos
 
         // Si el combate terminó, guardar en BD y notificar
         if (data.battleState.battleStatus !== 'active') {
