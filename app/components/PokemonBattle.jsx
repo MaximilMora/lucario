@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
@@ -9,22 +9,39 @@ import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
 
 /**
- * Componente principal del sistema de combate por turnos
+ * Componente principal del sistema de combate por turnos.
+ * El estado de la batalla se maneja completamente en el servidor (Supabase).
+ * El cliente solo envía battleId + attackId en cada turno.
  */
 export default function PokemonBattle({
   playerPokemonId,
   opponentPokemonId,
   onBattleEnd,
 }) {
-  const { user, isLoaded } = useUser(); // Obtener usuario de Clerk
-  const [battleState, setBattleState] = useState(null);
+  const { user, isLoaded } = useUser();
+
+  // Battle identity
+  const [battleId, setBattleId] = useState(null);
+
+  // Player data (set once on init, sprites/attacks don't change)
+  const [playerPokemon, setPlayerPokemon] = useState(null);
+  const [opponentPokemon, setOpponentPokemon] = useState(null);
+
+  // HP state (updated on each attack)
+  const [playerHP, setPlayerHP] = useState(0);
+  const [playerMaxHP, setPlayerMaxHP] = useState(0);
+  const [opponentHP, setOpponentHP] = useState(0);
+  const [opponentMaxHP, setOpponentMaxHP] = useState(0);
+
+  // Messages & status
+  const [messages, setMessages] = useState([]);
+  const [battleStatus, setBattleStatus] = useState('active');
+
+  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
-  const battleStartTimeRef = useRef(null);
-  const turnCountRef = useRef(0);
 
-  // Inicializar combate
   useEffect(() => {
     if (playerPokemonId && opponentPokemonId) {
       initializeBattle();
@@ -64,9 +81,24 @@ export default function PokemonBattle({
         throw new Error(data.error || 'Error al inicializar el combate');
       }
 
-      setBattleState(data.battleState);
-      battleStartTimeRef.current = Date.now(); // Guardar tiempo de inicio
-      turnCountRef.current = 0; // Resetear contador de turnos
+      // Store battleId and display data
+      setBattleId(data.battleId);
+      setPlayerPokemon({
+        name: data.player.pokemonName,
+        sprites: data.player.sprites,
+        attacks: data.player.attacks,
+      });
+      setOpponentPokemon({
+        name: data.opponent.pokemonName,
+        sprites: data.opponent.sprites,
+        attacks: data.opponent.attacks,
+      });
+      setPlayerHP(data.player.currentHP);
+      setPlayerMaxHP(data.player.maxHP);
+      setOpponentHP(data.opponent.currentHP);
+      setOpponentMaxHP(data.opponent.maxHP);
+      setMessages(data.messages);
+      setBattleStatus('active');
     } catch (err) {
       setError(err.message);
       console.error('Error initializing battle:', err);
@@ -75,98 +107,20 @@ export default function PokemonBattle({
     }
   };
 
-  // Función para guardar la batalla en Supabase
-  const saveBattleToDatabase = async (finalBattleState) => {
-    try {
-      const { player, opponent, battleStatus, messages, battleId, startedAt } =
-        finalBattleState;
-      const resolvedPlayerId = playerPokemonId ?? player?.pokemon?.id;
-      const resolvedOpponentId = opponentPokemonId ?? opponent?.pokemon?.id;
-      const resolvedPlayerName =
-        player?.pokemon?.name ||
-        (resolvedPlayerId ? `${resolvedPlayerId}` : '');
-      const resolvedOpponentName =
-        opponent?.pokemon?.name ||
-        (resolvedOpponentId ? `${resolvedOpponentId}` : '');
-
-      // Calcular duración (aproximada)
-      const durationSeconds = battleStartTimeRef.current
-        ? Math.floor((Date.now() - battleStartTimeRef.current) / 1000)
-        : 0;
-
-      // Obtener username del usuario de forma segura
-      let username = 'Guest';
-      let userId = 'guest';
-
-      if (isLoaded && user) {
-        userId = user.id || 'guest';
-        username =
-          user.username ||
-          user.firstName ||
-          (user.primaryEmailAddress?.emailAddress
-            ? user.primaryEmailAddress.emailAddress.split('@')[0]
-            : null) ||
-          'Guest';
-      }
-
-      const response = await fetch('/api/battles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          // Jugador 1 (usuario actual)
-          player1UserId: userId,
-          player1Username: username,
-          player1PokemonId: playerPokemonId,
-          player1PokemonName: player.pokemon?.name || '',
-          // Jugador 2 (AI oponente por ahora)
-          player2UserId: 'ai', // AI tiene user_id fijo
-          player2Username: 'AI Opponent',
-          player2PokemonId: opponentPokemonId,
-          player2PokemonName: opponent.pokemon?.name || '',
-          // Estado de la batalla
-          battleStatus: battleStatus,
-          totalTurns: turnCountRef.current,
-          durationSeconds: durationSeconds,
-          messages: messages || [],
-          startedAt: battleStartTimeRef.current
-            ? new Date(battleStartTimeRef.current).toISOString()
-            : new Date().toISOString(),
-          finishedAt: new Date().toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        console.error('Error guardando batalla en /api/battles', {
-          status: response.status,
-          errorPayload,
-        });
-      }
-    } catch (error) {
-      // No bloqueamos la UI si falla guardar en BD
-      console.error('Error saving battle to database:', error);
-      // Log adicional para debugging
-      if (error instanceof ReferenceError) {
-        console.error('ReferenceError details:', error.message, error.stack);
-      }
-    }
-  };
-
   const handleAttack = async (attackId) => {
-    if (!battleState || battleState.battleStatus !== 'active' || isAttacking) {
-      return;
-    }
+    if (!battleId || battleStatus !== 'active' || isAttacking) return;
 
     try {
       setIsAttacking(true);
 
+      // Only send battleId + attackId (server loads state from DB)
       const response = await fetch('/api/battle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'attack',
+          battleId,
           attackId,
-          battleState,
         }),
       });
 
@@ -176,23 +130,19 @@ export default function PokemonBattle({
         throw new Error(data.error || 'Error al ejecutar el ataque');
       }
 
-      // Actualizar estado con delay para animación
+      // Update UI with animation delay
       setTimeout(() => {
-        setBattleState(data.battleState);
+        setPlayerHP(data.playerHP);
+        setOpponentHP(data.opponentHP);
+        setMessages((prev) => [...prev, ...data.messages]);
+        setBattleStatus(data.battleStatus);
         setIsAttacking(false);
-        turnCountRef.current += 1; // Incrementar contador de turnos
 
-        // Si el combate terminó, guardar en BD y notificar
-        if (data.battleState.battleStatus !== 'active') {
-          // Guardar en Supabase (no bloquea la UI)
-          saveBattleToDatabase(data.battleState);
-
-          // Notificar al componente padre
-          if (onBattleEnd) {
-            setTimeout(() => {
-              onBattleEnd(data.battleState.battleStatus);
-            }, 2000);
-          }
+        // If battle ended, notify parent
+        if (data.battleStatus !== 'active' && onBattleEnd) {
+          setTimeout(() => {
+            onBattleEnd(data.battleStatus);
+          }, 2000);
         }
       }, 500);
     } catch (err) {
@@ -201,6 +151,8 @@ export default function PokemonBattle({
       console.error('Error executing attack:', err);
     }
   };
+
+  // ── Render states ──
 
   if (loading) {
     return (
@@ -230,11 +182,10 @@ export default function PokemonBattle({
     );
   }
 
-  if (!battleState) {
+  if (!playerPokemon || !opponentPokemon) {
     return null;
   }
 
-  const { player, opponent, messages, battleStatus } = battleState;
   const isBattleActive = battleStatus === 'active';
 
   return (
@@ -254,9 +205,9 @@ export default function PokemonBattle({
         <div className="flex justify-end items-start mb-8">
           <div className="text-right mr-4">
             <BattleHPBar
-              pokemon={opponent.pokemon}
-              currentHP={opponent.currentHP}
-              maxHP={opponent.maxHP}
+              pokemon={{ name: opponentPokemon.name }}
+              currentHP={opponentHP}
+              maxHP={opponentMaxHP}
               isPlayer={false}
             />
           </div>
@@ -265,10 +216,10 @@ export default function PokemonBattle({
               isAttacking ? 'animate-bounce' : ''
             } transition-transform duration-300`}
           >
-            {opponent.pokemon?.sprites?.front_default && (
+            {opponentPokemon.sprites?.front_default && (
               <Image
-                src={opponent.pokemon.sprites.front_default}
-                alt={opponent.pokemon.name}
+                src={opponentPokemon.sprites.front_default}
+                alt={opponentPokemon.name}
                 fill
                 className="object-contain"
                 unoptimized
@@ -284,20 +235,20 @@ export default function PokemonBattle({
               isAttacking ? 'animate-pulse' : ''
             } transition-transform duration-300`}
           >
-            {player.pokemon?.sprites?.back_default && (
+            {playerPokemon.sprites?.back_default && (
               <Image
-                src={player.pokemon.sprites.back_default}
-                alt={player.pokemon.name}
+                src={playerPokemon.sprites.back_default}
+                alt={playerPokemon.name}
                 fill
                 className="object-contain"
                 unoptimized
               />
             )}
-            {!player.pokemon?.sprites?.back_default &&
-              player.pokemon?.sprites?.front_default && (
+            {!playerPokemon.sprites?.back_default &&
+              playerPokemon.sprites?.front_default && (
                 <Image
-                  src={player.pokemon.sprites.front_default}
-                  alt={player.pokemon.name}
+                  src={playerPokemon.sprites.front_default}
+                  alt={playerPokemon.name}
                   fill
                   className="object-contain scale-x-[-1]"
                   unoptimized
@@ -306,9 +257,9 @@ export default function PokemonBattle({
           </div>
           <div className="text-left ml-4">
             <BattleHPBar
-              pokemon={player.pokemon}
-              currentHP={player.currentHP}
-              maxHP={player.maxHP}
+              pokemon={{ name: playerPokemon.name }}
+              currentHP={playerHP}
+              maxHP={playerMaxHP}
               isPlayer={true}
             />
           </div>
@@ -324,10 +275,10 @@ export default function PokemonBattle({
       {isBattleActive && (
         <div className="bg-white border-4 border-gray-900 rounded-lg p-4">
           <h3 className="text-lg font-bold mb-3 text-gray-800">
-            ¿Qué debería hacer {player.pokemon?.name}?
+            ¿Qué debería hacer {playerPokemon.name}?
           </h3>
           <BattleActions
-            attacks={player.attacks}
+            attacks={playerPokemon.attacks}
             onSelectAttack={handleAttack}
             disabled={isAttacking}
           />
@@ -352,7 +303,7 @@ export default function PokemonBattle({
           {onBattleEnd && (
             <button
               onClick={() => onBattleEnd(battleStatus)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-black"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
             >
               Volver
             </button>

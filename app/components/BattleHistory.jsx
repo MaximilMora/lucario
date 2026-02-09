@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getPokemonName, initPokemonMap } from '../utils/pokemonMap';
 
 /**
- * Componente para mostrar el historial de batallas guardadas en Supabase
+ * Componente para mostrar el historial de batallas guardadas en Supabase.
+ * Usa pokemon IDs + mapa local para resolver nombres (sin depender de pokemon_name en DB).
  */
 export default function BattleHistory() {
   const [battles, setBattles] = useState([]);
@@ -11,7 +13,8 @@ export default function BattleHistory() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchBattles();
+    // Ensure pokemon name map is loaded before fetching battles
+    initPokemonMap().then(() => fetchBattles());
   }, []);
 
   const fetchBattles = async () => {
@@ -46,17 +49,24 @@ export default function BattleHistory() {
     });
   };
 
-  const getWinnerBadge = (winner) => {
-    if (winner === 'player') {
+  const getStatusBadge = (battle) => {
+    const status = battle.status || battle.winner;
+    if (status === 'playerWon' || status === 'player') {
       return (
         <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
           Victoria
         </span>
       );
-    } else if (winner === 'opponent') {
+    } else if (status === 'opponentWon' || status === 'opponent') {
       return (
         <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">
           Derrota
+        </span>
+      );
+    } else if (status === 'active') {
+      return (
+        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">
+          En curso
         </span>
       );
     }
@@ -64,6 +74,25 @@ export default function BattleHistory() {
       <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold">
         Empate
       </span>
+    );
+  };
+
+  /**
+   * Resolve pokemon display name: prefer DB name (old records), fall back to local map by ID.
+   */
+  const resolvePlayerName = (battle) => {
+    return (
+      battle.player1_pokemon_name ||
+      battle.player_pokemon_name ||
+      getPokemonName(battle.player1_pokemon_id || battle.player_pokemon_id)
+    );
+  };
+
+  const resolveOpponentName = (battle) => {
+    return (
+      battle.player2_pokemon_name ||
+      battle.opponent_pokemon_name ||
+      getPokemonName(battle.player2_pokemon_id || battle.opponent_pokemon_id)
     );
   };
 
@@ -125,28 +154,32 @@ export default function BattleHistory() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="font-semibold text-gray-800 capitalize">
-                    {battle.player_pokemon_name}
+                    {resolvePlayerName(battle)}
                   </span>
                   <span className="text-gray-500">vs</span>
                   <span className="font-semibold text-gray-800 capitalize">
-                    {battle.opponent_pokemon_name}
+                    {resolveOpponentName(battle)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">
-                    {formatDate(battle.created_at)}
+                    {formatDate(battle.created_at || battle.started_at)}
                   </span>
-                  {getWinnerBadge(battle.winner)}
+                  {getStatusBadge(battle)}
                 </div>
               </div>
             </div>
-            {battle.log?.messages && (
+            {(battle.battle_log?.messages || battle.battle_state?.messages) && (
               <details className="mt-2">
                 <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
                   Ver detalles del combate
                 </summary>
                 <div className="mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 max-h-40 overflow-y-auto">
-                  {battle.log.messages.map((msg, idx) => (
+                  {(
+                    battle.battle_log?.messages ||
+                    battle.battle_state?.messages ||
+                    []
+                  ).map((msg, idx) => (
                     <p key={idx}>{msg}</p>
                   ))}
                 </div>
