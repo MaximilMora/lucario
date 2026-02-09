@@ -20,8 +20,13 @@ function getSupabase() {
     return null;
   }
   if (!supabaseServer) {
-    const { supabaseServer: client } = require('../../lib/supabaseServerClient');
-    supabaseServer = client;
+    try {
+      const { supabaseServer: client } = require('../../lib/supabaseServerClient');
+      supabaseServer = client;
+    } catch (error) {
+      console.error('Failed to load Supabase client:', error.message);
+      return null;
+    }
   }
   return supabaseServer;
 }

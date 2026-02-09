@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '../../lib/supabaseServerClient';
+
+// Helper para obtener Supabase de forma segura
+function getSupabase() {
+  try {
+    const { supabaseServer } = require('../../lib/supabaseServerClient');
+    return supabaseServer;
+  } catch (error) {
+    console.error('Supabase not configured:', error.message);
+    return null;
+  }
+}
 
 /**
  * GET /api/ranking
@@ -21,9 +31,22 @@ export async function GET(request) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const userId = searchParams.get('user_id');
 
+    const supabase = getSupabase();
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          success: true,
+          ranking: [],
+          pagination: { total: 0, limit, offset, hasMore: false },
+          message: 'Database not configured'
+        },
+        { status: 200 }
+      );
+    }
+
     // Si se solicita un usuario específico
     if (userId) {
-      const { data: userStats, error: userError } = await supabaseServer
+      const { data: userStats, error: userError } = await supabase
         .from('user_battle_stats')
         .select('*')
         .eq('user_id', userId)
@@ -45,7 +68,7 @@ export async function GET(request) {
       }
 
       // Calcular posición
-      const { count } = await supabaseServer
+      const { count } = await supabase
         .from('user_battle_stats')
         .select('*', { count: 'exact', head: true })
         .gt('rating', userStats.rating);
@@ -73,13 +96,13 @@ export async function GET(request) {
     }
 
     // Obtener total de jugadores
-    const { count: total } = await supabaseServer
+    const { count: total } = await supabase
       .from('user_battle_stats')
       .select('*', { count: 'exact', head: true })
       .gt('total_battles', 0);
 
     // Obtener ranking paginado
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('user_battle_stats')
       .select('*')
       .gt('total_battles', 0)

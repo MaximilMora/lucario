@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { supabaseServer } from '../../lib/supabaseServerClient';
+
+// Helper para obtener Supabase de forma segura
+function getSupabase() {
+  try {
+    const { supabaseServer } = require('../../lib/supabaseServerClient');
+    return supabaseServer;
+  } catch (error) {
+    console.error('Supabase not configured:', error.message);
+    return null;
+  }
+}
 
 /**
  * GET /api/stats
@@ -30,8 +40,22 @@ export async function GET(request) {
       );
     }
 
+    const supabase = getSupabase();
+    if (!supabase) {
+      return NextResponse.json(
+        { 
+          success: true,
+          stats: null,
+          ranking: null,
+          recentBattles: [],
+          message: 'Database not configured'
+        },
+        { status: 200 }
+      );
+    }
+
     // Obtener estadísticas del usuario desde user_battle_stats
-    const { data: stats, error: statsError } = await supabaseServer
+    const { data: stats, error: statsError } = await supabase
       .from('user_battle_stats')
       .select('*')
       .eq('user_id', userId)
@@ -48,7 +72,7 @@ export async function GET(request) {
     // Calcular posición en el ranking si tiene stats
     let rankPosition = null;
     if (stats) {
-      const { count } = await supabaseServer
+      const { count } = await supabase
         .from('user_battle_stats')
         .select('*', { count: 'exact', head: true })
         .gt('rating', stats.rating);
@@ -57,7 +81,7 @@ export async function GET(request) {
     }
 
     // Obtener últimas batallas del usuario
-    const { data: recentBattles } = await supabaseServer
+    const { data: recentBattles } = await supabase
       .from('battles')
       .select('id, player1_pokemon_id, player2_pokemon_id, status, winner_user_id, total_turns, created_at')
       .or(`player1_user_id.eq.${userId},player2_user_id.eq.${userId}`)
