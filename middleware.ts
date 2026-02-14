@@ -15,7 +15,14 @@ export default clerkMiddleware(
   {
     // CSP explícito para evitar el aviso "script-src was not explicitly set"
     // y permitir scripts de Next.js y Clerk (requiere @clerk/nextjs >= 6.14.0)
-    contentSecurityPolicy: {},
+    contentSecurityPolicy: {
+      directives: {
+        // Permitir fetch a PokeAPI desde el cliente (galería, etc.)
+        'connect-src': ['https://pokeapi.co'],
+        // Permitir iframe de Vercel Live en previews
+        'frame-src': ['https://vercel.live'],
+      },
+    },
   }
 );
 
