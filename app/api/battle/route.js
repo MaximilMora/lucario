@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { supabaseServer as supabaseClient } from '../../lib/supabaseServerClient';
 
 // ============================================
 // CONFIGURACIÓN
@@ -7,28 +8,23 @@ import { auth } from '@clerk/nextjs/server';
 export const maxDuration = 30;
 
 // Modo desarrollo sin base de datos (usa memoria)
-const USE_IN_MEMORY_DB = process.env.SKIP_SUPABASE === 'true' || !process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SKIP_SUPABASE_ENV = process.env.SKIP_SUPABASE === 'true';
+const HAS_SUPABASE_KEYS = !!(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+const USE_IN_MEMORY_DB = SKIP_SUPABASE_ENV || !HAS_SUPABASE_KEYS;
 
-// Almacenamiento en memoria para desarrollo
+// Almacenamiento en memoria para desarrollo / fallback
 const inMemoryBattles = new Map();
 const inMemoryBattleStates = new Map();
 
-// Cliente de Supabase (lazy load)
-let supabaseServer = null;
+// Cliente de Supabase (usa import para Vercel serverless)
 function getSupabase() {
   if (USE_IN_MEMORY_DB) {
     return null;
   }
-  if (!supabaseServer) {
-    try {
-      const { supabaseServer: client } = require('../../lib/supabaseServerClient');
-      supabaseServer = client;
-    } catch (error) {
-      console.error('Failed to load Supabase client:', error.message);
-      return null;
-    }
-  }
-  return supabaseServer;
+  return supabaseClient;
 }
 
 // ============================================
@@ -212,16 +208,18 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
 }
 
 /**
- * Obtiene el estado actual de una batalla desde Supabase
+ * Obtiene el estado actual de una batalla (memoria o Supabase)
  */
 async function getBattleState(battleId) {
-  // Modo en memoria
-  if (USE_IN_MEMORY_DB) {
-    return inMemoryBattleStates.get(battleId) || null;
-  }
+  // Siempre revisar memoria primero (fallback de batallas creadas en memoria)
+  const fromMemory = inMemoryBattleStates.get(battleId);
+  if (fromMemory) return fromMemory;
 
-  // Modo Supabase
+  if (USE_IN_MEMORY_DB) return null;
+
   const supabase = getSupabase();
+  if (!supabase) return null;
+
   const { data, error } = await supabase
     .from('battle_state')
     .select('*')
@@ -237,16 +235,18 @@ async function getBattleState(battleId) {
 }
 
 /**
- * Obtiene la información de una batalla
+ * Obtiene la información de una batalla (memoria o Supabase)
  */
 async function getBattle(battleId) {
-  // Modo en memoria
-  if (USE_IN_MEMORY_DB) {
-    return inMemoryBattles.get(battleId) || null;
-  }
+  // Siempre revisar memoria primero
+  const fromMemory = inMemoryBattles.get(battleId);
+  if (fromMemory) return fromMemory;
 
-  // Modo Supabase
+  if (USE_IN_MEMORY_DB) return null;
+
   const supabase = getSupabase();
+  if (!supabase) return null;
+
   const { data, error } = await supabase
     .from('battles')
     .select('*')
@@ -262,24 +262,24 @@ async function getBattle(battleId) {
 }
 
 /**
- * Actualiza el estado de batalla en Supabase
+ * Actualiza el estado de batalla (memoria o Supabase)
  */
 async function updateBattleState(battleId, updates) {
-  // Modo en memoria
-  if (USE_IN_MEMORY_DB) {
-    const current = inMemoryBattleStates.get(battleId);
-    if (current) {
-      inMemoryBattleStates.set(battleId, {
-        ...current,
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-    }
+  const inMemory = inMemoryBattleStates.get(battleId);
+  if (inMemory) {
+    inMemoryBattleStates.set(battleId, {
+      ...inMemory,
+      ...updates,
+      updated_at: new Date().toISOString(),
+    });
     return;
   }
 
-  // Modo Supabase
+  if (USE_IN_MEMORY_DB) return;
+
   const supabase = getSupabase();
+  if (!supabase) return;
+
   const { error } = await supabase
     .from('battle_state')
     .update({
@@ -320,7 +320,6 @@ async function logBattleTurn(turnData) {
 async function finalizeBattle(battleId, winnerSide, totalTurns) {
   const nowIso = new Date().toISOString();
 
-  // Obtener datos de la batalla
   const battle = await getBattle(battleId);
   if (!battle) return;
 
@@ -328,8 +327,8 @@ async function finalizeBattle(battleId, winnerSide, totalTurns) {
   const winnerUserId = winnerSide === 'player1' ? battle.player1_user_id : battle.player2_user_id;
   const loserUserId = winnerSide === 'player1' ? battle.player2_user_id : battle.player1_user_id;
 
-  // Modo en memoria
-  if (USE_IN_MEMORY_DB) {
+  // Batalla en memoria (incluye fallback cuando Supabase falló)
+  if (inMemoryBattles.has(battleId)) {
     const currentBattle = inMemoryBattles.get(battleId);
     if (currentBattle) {
       inMemoryBattles.set(battleId, {
@@ -341,12 +340,13 @@ async function finalizeBattle(battleId, winnerSide, totalTurns) {
       });
     }
     inMemoryBattleStates.delete(battleId);
-    console.log('[DEV MODE] Battle finalized:', status);
     return;
   }
 
-  // Modo Supabase
+  if (USE_IN_MEMORY_DB) return;
+
   const supabase = getSupabase();
+  if (!supabase) return;
 
   // Actualizar batalla
   await supabase
@@ -474,14 +474,45 @@ function formatBattleStateForClient(state) {
 // ============================================
 
 /**
+ * Obtiene userId de Clerk sin lanzar en Vercel
+ */
+async function getAuthUserId() {
+  try {
+    const { userId } = await auth();
+    return userId ?? null;
+  } catch (e) {
+    console.warn('Auth not available:', e?.message);
+    return null;
+  }
+}
+
+/**
+ * Parsea el body JSON de forma segura
+ */
+async function parseBody(request) {
+  try {
+    return await request.json();
+  } catch (e) {
+    console.warn('Invalid JSON body:', e?.message);
+    return null;
+  }
+}
+
+/**
  * POST /api/battle
  * Maneja las acciones del combate de forma SEGURA
  * El cliente solo envía IDs, el servidor mantiene el estado
  */
 export async function POST(request) {
   try {
-    const { userId: clerkUserId } = await auth();
-    const body = await request.json();
+    const clerkUserId = await getAuthUserId();
+    const body = await parseBody(request);
+    if (body == null) {
+      return NextResponse.json(
+        { error: 'Invalid request body (JSON required)' },
+        { status: 400 }
+      );
+    }
     const { action } = body;
 
     if (!action) {
@@ -517,27 +548,73 @@ export async function POST(request) {
         );
       }
 
-      // Crear registro de batalla
       const player1UserId = clerkUserId || 'guest';
       const player1Username = username || (player1UserId === 'guest' ? 'Guest' : 'Player');
 
-      const battleId = await createBattle({
-        player1UserId,
-        player1Username,
-        player1PokemonId: player1Data.id,
-        player2PokemonId: player2Data.id,
-      });
+      let battleId;
+      try {
+        battleId = await createBattle({
+          player1UserId,
+          player1Username,
+          player1PokemonId: player1Data.id,
+          player2PokemonId: player2Data.id,
+        });
+        await createBattleState({
+          battleId,
+          player1Data,
+          player2Data,
+        });
+      } catch (dbError) {
+        console.error('Supabase battle init failed, using in-memory fallback:', dbError?.message);
+        // Fallback: crear batalla en memoria para esta request
+        battleId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        inMemoryBattles.set(battleId, {
+          id: battleId,
+          player1_user_id: player1UserId,
+          player1_username: player1Username,
+          player2_user_id: 'ai',
+          player2_username: 'AI Opponent',
+          player1_pokemon_id: player1Data.id,
+          player2_pokemon_id: player2Data.id,
+          status: 'active',
+          started_at: new Date().toISOString(),
+        });
+        const stateData = {
+          battle_id: battleId,
+          player1_pokemon_id: player1Data.id,
+          player1_pokemon_name: player1Data.name,
+          player1_current_hp: extractPokemonStats(player1Data).hp,
+          player1_max_hp: extractPokemonStats(player1Data).hp,
+          player1_attack: extractPokemonStats(player1Data).attack,
+          player1_defense: extractPokemonStats(player1Data).defense,
+          player1_speed: extractPokemonStats(player1Data).speed,
+          player1_types: player1Data.types?.map((t) => t.type.name) || [],
+          player1_attacks: generatePokemonAttacks(player1Data),
+          player1_sprite_front: player1Data.sprites?.front_default,
+          player1_sprite_back: player1Data.sprites?.back_default,
+          player2_pokemon_id: player2Data.id,
+          player2_pokemon_name: player2Data.name,
+          player2_current_hp: extractPokemonStats(player2Data).hp,
+          player2_max_hp: extractPokemonStats(player2Data).hp,
+          player2_attack: extractPokemonStats(player2Data).attack,
+          player2_defense: extractPokemonStats(player2Data).defense,
+          player2_speed: extractPokemonStats(player2Data).speed,
+          player2_types: player2Data.types?.map((t) => t.type.name) || [],
+          player2_attacks: generatePokemonAttacks(player2Data),
+          player2_sprite_front: player2Data.sprites?.front_default,
+          player2_sprite_back: player2Data.sprites?.back_default,
+          current_turn: 'player1',
+          turn_number: 0,
+          status: 'active',
+          messages: [
+            { text: `¡${player1Data.name} vs ${player2Data.name}!`, type: 'system' },
+            { text: '¡Comienza el combate!', type: 'system' },
+          ],
+        };
+        inMemoryBattleStates.set(battleId, stateData);
+      }
 
-      // Crear estado inicial en Supabase (FUENTE DE VERDAD)
-      await createBattleState({
-        battleId,
-        player1Data,
-        player2Data,
-      });
-
-      // Obtener el estado recién creado
       const battleState = await getBattleState(battleId);
-
       return NextResponse.json({
         success: true,
         battleState: formatBattleStateForClient(battleState),
@@ -698,11 +775,25 @@ export async function POST(request) {
       }
 
       // ---- TURNO DE LA IA ----
-      const aiAttack = state.player2_attacks[Math.floor(Math.random() * state.player2_attacks.length)];
+      const opponentAttacks = state.player2_attacks || [];
+
+      if (!Array.isArray(opponentAttacks) || opponentAttacks.length === 0) {
+        console.error('Opponent has no valid attacks:', {
+          player2_pokemon_name: state.player2_pokemon_name,
+          player2_attacks: state.player2_attacks,
+        });
+        return NextResponse.json(
+          { error: 'Opponent has no valid attacks' },
+          { status: 500 }
+        );
+      }
+
+      const aiAttack =
+        opponentAttacks[Math.floor(Math.random() * opponentAttacks.length)];
       const player2Damage = calculateDamage(
         state.player2_attack,
         state.player1_defense,
-        aiAttack.power
+        Number(aiAttack?.power) || 10
       );
 
       const player1HPBefore = newPlayer1HP;
@@ -865,8 +956,8 @@ export async function POST(request) {
         );
       }
 
-      // Modo en memoria
-      if (USE_IN_MEMORY_DB) {
+      // Batalla en memoria
+      if (inMemoryBattles.has(battleId)) {
         const currentBattle = inMemoryBattles.get(battleId);
         if (currentBattle) {
           inMemoryBattles.set(battleId, {
@@ -876,9 +967,7 @@ export async function POST(request) {
           });
         }
         inMemoryBattleStates.delete(battleId);
-        console.log('[DEV MODE] Battle abandoned');
-      } else {
-        // Modo Supabase
+      } else if (getSupabase()) {
         const supabase = getSupabase();
         await supabase
           .from('battles')
@@ -887,7 +976,6 @@ export async function POST(request) {
             finished_at: new Date().toISOString(),
           })
           .eq('id', battleId);
-
         await supabase.from('battle_state').delete().eq('battle_id', battleId);
       }
 
@@ -918,7 +1006,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const battleId = searchParams.get('id');
-    const { userId: clerkUserId } = await auth();
+    const clerkUserId = await getAuthUserId();
 
     if (!battleId) {
       return NextResponse.json(

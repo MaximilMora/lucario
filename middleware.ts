@@ -6,11 +6,18 @@ const isPublicRoute = createRouteMatcher(
     : []
 );
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (!isPublicRoute(req)) {
+      await auth.protect();
+    }
+  },
+  {
+    // CSP explícito para evitar el aviso "script-src was not explicitly set"
+    // y permitir scripts de Next.js y Clerk (requiere @clerk/nextjs >= 6.14.0)
+    contentSecurityPolicy: {},
   }
-});
+);
 
 export const config = {
   matcher: [
