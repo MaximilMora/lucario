@@ -73,10 +73,7 @@ export default function BattleStarter() {
 
   if (pvpBattleId) {
     return (
-      <PvPBattle
-        battleId={pvpBattleId}
-        onBattleEnd={handlePvPBattleEnd}
-      />
+      <PvPBattle battleId={pvpBattleId} onBattleEnd={handlePvPBattleEnd} />
     );
   }
 
@@ -142,9 +139,7 @@ export default function BattleStarter() {
           </p>
         )}
 
-        {!battleMode && (
-          <BattleModeSelector onSelect={setBattleMode} />
-        )}
+        {!battleMode && <BattleModeSelector onSelect={setBattleMode} />}
 
         {loading ? (
           <div className="flex justify-center items-center py-12">

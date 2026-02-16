@@ -157,10 +157,7 @@ export async function POST(request) {
         (currentTurn === 'player1' && !isPlayer1) ||
         (currentTurn === 'player2' && !isPlayer2)
       ) {
-        return NextResponse.json(
-          { error: 'Not your turn' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Not your turn' }, { status: 400 });
       }
 
       const p1Data = battle.player1_pokemon_data || {};
@@ -173,10 +170,7 @@ export async function POST(request) {
         : [];
       const selectedAttack = attacks.find(a => a.id === attackId);
       if (!selectedAttack) {
-        return NextResponse.json(
-          { error: 'Invalid attack' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid attack' }, { status: 400 });
       }
 
       const attackerAttack = attackerData.attack ?? 50;
@@ -196,8 +190,7 @@ export async function POST(request) {
         p1Hp = Math.max(0, p1Hp - damage);
       }
 
-      const nextTurn =
-        currentTurn === 'player1' ? 'player2' : 'player1';
+      const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       let newStatus = 'active';
       let winnerUserId = null;
 

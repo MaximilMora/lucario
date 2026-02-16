@@ -73,7 +73,10 @@ export async function POST(request) {
 
     const user = await currentUser();
     const username =
-      user?.username || user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'Player';
+      user?.username ||
+      user?.firstName ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      'Player';
 
     const body = await request.json().catch(() => ({}));
     const action = body.action || 'check';
@@ -231,13 +234,15 @@ export async function POST(request) {
         });
       }
 
-      const { error: insertErr } = await supabase.from('matchmaking_queue').insert({
-        user_id: userId,
-        username,
-        pokemon_id: pkmId,
-        pokemon_name: pkmName,
-        status: 'waiting',
-      });
+      const { error: insertErr } = await supabase
+        .from('matchmaking_queue')
+        .insert({
+          user_id: userId,
+          username,
+          pokemon_id: pkmId,
+          pokemon_name: pkmName,
+          status: 'waiting',
+        });
 
       if (insertErr) {
         console.error('Matchmaking join insert error:', insertErr);

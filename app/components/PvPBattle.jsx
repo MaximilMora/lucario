@@ -81,7 +81,8 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
       : null;
 
   const buildPlayerFromData = (pData, currentHp, maxHp) => {
-    if (!pData) return { pokemon: { name: '?' }, currentHP: 0, maxHP: 1, attacks: [] };
+    if (!pData)
+      return { pokemon: { name: '?' }, currentHP: 0, maxHP: 1, attacks: [] };
     return {
       pokemon: {
         name: pData.name,
@@ -97,9 +98,7 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
   };
 
   const isMyTurn =
-    battle?.status === 'active' &&
-    mySide &&
-    battle.current_turn === mySide;
+    battle?.status === 'active' && mySide && battle.current_turn === mySide;
 
   const player =
     battle && mySide
