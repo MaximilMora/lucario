@@ -24,14 +24,6 @@ export default function PokemonBattle({
   const [isAttacking, setIsAttacking] = useState(false);
   const battleIdRef = useRef(null);
 
-  // Inicializar combate
-  useEffect(() => {
-    if (playerPokemonId && opponentPokemonId) {
-      initializeBattle();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerPokemonId, opponentPokemonId]);
-
   /**
    * Inicializa la batalla enviando los IDs de Pokémon al servidor
    */
@@ -66,6 +58,14 @@ export default function PokemonBattle({
       setLoading(false);
     }
   };
+
+  // Inicializar combate
+  useEffect(() => {
+    if (playerPokemonId && opponentPokemonId) {
+      initializeBattle();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerPokemonId, opponentPokemonId]);
 
   /**
    * Ejecuta un ataque enviando SOLO el battleId y attackId
