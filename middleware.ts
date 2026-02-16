@@ -17,6 +17,14 @@ export default clerkMiddleware(
     // y permitir scripts de Next.js y Clerk (requiere @clerk/nextjs >= 6.14.0)
     contentSecurityPolicy: {
       directives: {
+        // Permitir scripts de Next.js y Clerk
+        // 'unsafe-eval' necesario para Next.js hot reload en desarrollo
+        // 'unsafe-inline' necesario para algunos scripts inline de Next.js/Clerk
+        'script-src': [
+          'self',
+          'unsafe-eval', // Necesario para Next.js en desarrollo
+          'unsafe-inline', // Necesario para scripts inline de Next.js/Clerk
+        ],
         // Permitir fetch a PokeAPI desde el cliente (galería, etc.)
         // Incluir dominios de Clerk para evitar errores de autenticación
         'connect-src': [
