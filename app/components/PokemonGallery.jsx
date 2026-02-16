@@ -12,12 +12,22 @@ export default function PokemonGallery() {
     async function fetchPokemons() {
       setLoading(true);
       setError(null);
+      const url = 'https://pokeapi.co/api/v2/pokemon?limit=20';
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/335ebe47-690b-4f82-a435-427062103bc8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PokemonGallery.jsx:fetchPokemons:entry',message:'Fetch Pokemon list starting',data:{url,isBrowser:typeof window!=='undefined',onLine:typeof navigator!=='undefined'?navigator.onLine:null},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       try {
-        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=20');
+        const res = await fetch(url);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/335ebe47-690b-4f82-a435-427062103bc8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PokemonGallery.jsx:fetchPokemons:afterFetch',message:'Fetch completed',data:{status:res?.status,ok:res?.ok,statusText:res?.statusText},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
         if (!res.ok) throw new Error('Failed to fetch Pokémon');
         const data = await res.json();
         setPokemons(data.results);
       } catch (err) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/335ebe47-690b-4f82-a435-427062103bc8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PokemonGallery.jsx:fetchPokemons:catch',message:'Fetch error',data:{name:err?.name,message:err?.message,constructor:err?.constructor?.name,cause:err?.cause?.message||null},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
         setError(err.message);
       } finally {
         setLoading(false);
