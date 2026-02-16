@@ -1,236 +1,151 @@
-# Claude AI Assistant - Project Context
+# Lucario - Pokemon Battle Arena
 
-This file contains context about the Pokemon Pokedex Chat Assistant project to help Claude understand the codebase and assist with development.
+Este archivo contiene contexto sobre el proyecto para ayudar a entender el codebase.
 
-## 📋 Project Overview
+## Resumen del Proyecto
 
-**Pokemon Pokedex Chat Assistant** - An interactive Pokemon knowledge assistant that evolves from a simple search interface to an intelligent conversational tool.
+**Lucario** es una aplicación web de Pokémon que incluye:
 
-### Target Users
+- Galería de Pokémon con datos de PokeAPI
+- Sistema de batallas por turnos contra IA
+- Chat con asistente IA especializado en Pokémon (Google Gemini)
+- Sistema de ranking y estadísticas
+- Autenticación de usuarios
 
-Pokemon trainers (casual and competitive) who want quick, intelligent answers about Pokemon data, battle strategies, and team building advice.
+## Stack Tecnológico
 
-### Tech Stack
+| Categoría     | Tecnología                           |
+| ------------- | ------------------------------------ |
+| Frontend      | React 19, Next.js 16, Tailwind CSS 4 |
+| Backend       | Next.js API Routes                   |
+| Base de Datos | Supabase (PostgreSQL)                |
+| Autenticación | Clerk                                |
+| IA            | Google Gemini (gemini-2.5-flash)     |
+| Testing       | Vitest (unit), Playwright (e2e)      |
+| Linting       | ESLint, Prettier                     |
 
-- **Frontend**: React with Next.js, TypeScript, Tailwind CSS
-- **Backend**: Next.js API routes, OpenAI API integration
-- **Data Sources**: PokeAPI for Pokemon data
-- **Deployment**: Vercel
-
-## 🏗️ Project Structure
+## Estructura del Proyecto
 
 ```
-pokemon-pokedex-assistant/
-├── pages/
+lucario/
+├── app/
 │   ├── api/
-│   │   └── chat.js              # AI chat endpoint
-│   ├── pokemon/
-│   │   └── [id].js              # Pokemon detail pages
-│   └── index.js                 # Pokemon gallery home page
-├── components/
-│   ├── PokemonGallery.jsx       # Main Pokemon grid
-│   ├── PokemonCard.jsx          # Individual Pokemon cards
-│   ├── PokemonDetail.jsx        # Detailed Pokemon view
-│   ├── ChatInterface.jsx        # AI chat interface
-│   ├── MessageBubble.jsx        # Chat message display
-│   └── StatBar.jsx              # Pokemon stat visualization
-├── styles/
-└── utils/
-    └── pokeapi.js               # API utility functions
+│   │   ├── battle/          # Sistema de batallas (CRUD principal)
+│   │   ├── battles/         # Historial de batallas (solo GET)
+│   │   ├── chat/            # Chat con IA
+│   │   ├── ranking/         # Ranking de jugadores
+│   │   └── stats/           # Estadísticas de usuario
+│   ├── battle/              # Páginas de batalla
+│   ├── components/          # Componentes React
+│   ├── lib/                 # Utilidades (Supabase client)
+│   ├── pokemon/[id]/        # Página de detalle de Pokémon
+│   └── utils/               # Funciones auxiliares
+├── supabase/
+│   └── migrations/          # SQL para tablas
+├── __tests__/               # Tests unitarios
+└── e2e/                     # Tests end-to-end
 ```
 
-## 🎯 Development Phases
+## Arquitectura de Seguridad (Sistema de Batallas)
 
-### Phase 1: Foundation (CURRENT)
+El sistema usa **Server-Side State** para prevenir manipulación:
 
-- ✅ Pokemon Gallery Browser - Grid of first 20 Pokemon
-- 🔄 Pokemon Detail View - Individual Pokemon stats and info
-- ⏳ Pokemon Search & Filtering
-- ⏳ Type Chart & Weakness Display
-
-### Phase 2: AI Integration (PLANNED)
-
-- Natural Language Query Interface
-- Battle Matchup Questions
-- Pokemon Information Queries
-- Conversational Context Memory
-
-### Phase 3: Advanced Features (PLANNED)
-
-- AI Team Composition Suggestions
-- Battle Strategy Recommendations
-- Opponent Team Analysis
-- Optimized Moveset Recommendations
-
-### Phase 4: Personalization (PLANNED)
-
-- User Profile & Favorite Pokemon System
-- Personalized Recommendations
-- Conversation History & Search
-- Community Learning & Feedback
-
-## 🔌 API Endpoints
-
-### PokeAPI Integration
-
-```javascript
-// Get Pokemon list (first 20)
-GET https://pokeapi.co/api/v2/pokemon?limit=20
-
-// Get individual Pokemon details
-GET https://pokeapi.co/api/v2/pokemon/{id}
-
-// Pokemon sprites
-https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png
+```
+Cliente                    API Route                  Supabase
+┌─────────┐               ┌─────────┐               ┌─────────┐
+│ Solo    │──battleId────►│ Valida  │──────────────►│ FUENTE  │
+│ envía   │  attackId     │ calcula │               │ DE      │
+│ IDs     │◄─nuevo estado─│ guarda  │◄──────────────│ VERDAD  │
+└─────────┘               └─────────┘               └─────────┘
 ```
 
-### Internal API Routes
+**Principios:**
 
-```javascript
-// AI Chat endpoint
-POST /api/chat
-{
-  message: "What beats Charizard?",
-  conversationHistory: [...previous messages]
-}
+1. El cliente NUNCA envía estado, solo IDs
+2. El servidor obtiene el estado de Supabase
+3. Validación de permisos en cada request
+4. Cálculos de daño en el servidor
+
+## Tablas de Supabase
+
+| Tabla               | Propósito                               |
+| ------------------- | --------------------------------------- |
+| `battles`           | Registro de batallas (metadatos)        |
+| `battle_state`      | Estado en tiempo real (durante combate) |
+| `battle_turns`      | Historial de turnos                     |
+| `user_battle_stats` | Estadísticas y rating de usuarios       |
+
+## API Endpoints
+
+### Batalla (`/api/battle`)
+
+- `POST { action: 'init', playerPokemonId, opponentPokemonId }` - Iniciar
+- `POST { action: 'attack', battleId, attackId }` - Atacar
+- `POST { action: 'getState', battleId }` - Obtener estado
+- `POST { action: 'abandon', battleId }` - Abandonar
+- `GET ?id=xxx` - Consultar batalla
+
+### Historial (`/api/battles`)
+
+- `GET ?limit=10&user_id=xxx&status=xxx` - Listar batallas
+
+### Chat (`/api/chat`)
+
+- `POST { message, conversationHistory }` - Enviar mensaje
+
+### Ranking (`/api/ranking`)
+
+- `GET ?limit=10&offset=0` - Top ranking
+- `GET ?user_id=xxx` - Posición de usuario
+
+### Estadísticas (`/api/stats`)
+
+- `GET ?user_id=xxx` - Stats de usuario
+
+## Variables de Entorno
+
+```env
+# Clerk (Autenticación)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Google AI
+GOOGLE_GENAI_API_KEY=
+
+# Opcional
+NEXT_PUBLIC_SKIP_AUTH=true  # Para desarrollo sin auth
 ```
 
-## 📊 Key Data Structures
+## Comandos
 
-### Pokemon Basic Info (from list endpoint)
-
-```javascript
-{
-  name: "bulbasaur",
-  url: "https://pokeapi.co/api/v2/pokemon/1/"
-}
+```bash
+npm run dev          # Desarrollo
+npm run build        # Build producción
+npm run test         # Tests unitarios
+npm run test:e2e     # Tests e2e
+npm run lint         # Linting
+npm run format       # Formatear código
 ```
 
-### Pokemon Detailed Info (from individual endpoint)
+## Flujo de una Batalla
 
-```javascript
-{
-  id: 1,
-  name: "bulbasaur",
-  height: 7,
-  weight: 69,
-  types: [
-    { type: { name: "grass" } },
-    { type: { name: "poison" } }
-  ],
-  stats: [
-    { base_stat: 45, stat: { name: "hp" } },
-    { base_stat: 49, stat: { name: "attack" } }
-  ],
-  abilities: [
-    { ability: { name: "overgrow" } }
-  ],
-  sprites: {
-    front_default: "image_url"
-  }
-}
-```
+1. **Inicio:** Cliente envía IDs de Pokémon → Servidor crea `battles` y `battle_state`
+2. **Turno:** Cliente envía `battleId` + `attackId` → Servidor calcula daño → Actualiza Supabase
+3. **Fin:** Servidor detecta HP=0 → Actualiza `user_battle_stats` → Elimina `battle_state`
 
-## 🎨 Design Guidelines
+## Testing
 
-### Pokemon Cards
+- **Unit:** `__tests__/` con Vitest
+- **E2E:** `e2e/` con Playwright
+- Ejecutar: `npm run test:all`
 
-- 200px width, auto height
-- 16px gap between cards
-- 12px border radius
-- Hover effect: scale(1.02)
+## Contribuir
 
-### Responsive Breakpoints
-
-- Desktop (1024px+): 4 columns
-- Tablet (768px-1023px): 3 columns
-- Mobile (480px-767px): 2 columns
-- Small mobile (<480px): 1 column
-
-### Pokemon Type Colors
-
-```css
-.type-grass {
-  background: #78c850;
-}
-.type-fire {
-  background: #f08030;
-}
-.type-water {
-  background: #6890f0;
-}
-.type-electric {
-  background: #f8d030;
-}
-/* Add more as needed */
-```
-
-## 🧪 Testing Scenarios
-
-### Critical User Flows
-
-1. **Browse Pokemon**: Load gallery → View Pokemon cards → Click for details
-2. **Pokemon Details**: Navigate to detail page → View stats → Return to gallery
-3. **AI Chat**: Ask question → Receive response → Follow-up questions
-
-### Common Queries for AI Testing
-
-- "What beats Charizard?"
-- "Tell me about Pikachu"
-- "What are electric type weaknesses?"
-- "How does Charmander evolve?"
-
-## 🚀 Getting Started for New Contributors
-
-1. **Environment Setup**:
-
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-2. **Required Environment Variables**:
-
-   ```
-   OPENAI_API_KEY=your_key_here  # For AI features (Phase 2+)
-   ```
-
-3. **Key Files to Understand**:
-   - `/pages/index.js` - Home page with Pokemon gallery
-   - `/components/PokemonGallery.jsx` - Main grid component
-   - `/pages/pokemon/[id].js` - Dynamic Pokemon detail pages
-
-## 🎓 Learning Objectives
-
-This project teaches:
-
-- **React Fundamentals**: Components, state, props, hooks
-- **Next.js Features**: File-based routing, API routes, SSR
-- **API Integration**: REST APIs, data fetching, error handling
-- **Responsive Design**: Mobile-first CSS, Tailwind utilities
-- **AI Integration**: OpenAI API, prompt engineering
-- **State Management**: Local state, data flow
-- **User Experience**: Loading states, error boundaries, navigation
-
-## 🤝 Contributing
-
-When working on this project:
-
-- Follow component-based architecture
-- Keep Pokemon data fetching in utility functions
-- Use TypeScript for type safety where possible
-- Test on mobile and desktop breakpoints
-- Consider loading states and error handling
-- Keep AI prompts focused on Pokemon domain
-
-## 📚 Helpful Resources
-
-- [PokeAPI Documentation](https://pokeapi.co/docs/v2)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Documentation](https://react.dev)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-
----
-
-_This file should be updated as the project evolves. Last updated: August 2025_
+1. Seguir arquitectura de componentes existente
+2. Mantener lógica de negocio en el servidor
+3. Nunca confiar en datos del cliente
+4. Agregar tests para nuevas features

@@ -42,7 +42,7 @@ test.describe('Pokemon Gallery', () => {
     });
 
     // Mock Clerk API routes
-    await page.route('**/clerk/**', async (route) => {
+    await page.route('**/clerk/**', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -54,7 +54,7 @@ test.describe('Pokemon Gallery', () => {
     });
 
     // Mock PokeAPI response
-    await page.route('https://pokeapi.co/api/v2/pokemon*', async (route) => {
+    await page.route('https://pokeapi.co/api/v2/pokemon*', async route => {
       const url = new URL(route.request().url());
       const limit = url.searchParams.get('limit') || '20';
 

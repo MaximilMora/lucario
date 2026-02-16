@@ -1,68 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
 import BattleHPBar from './BattleHPBar';
 import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
 
 /**
- * Componente principal del sistema de combate por turnos.
- * El estado de la batalla se maneja completamente en el servidor (Supabase).
- * El cliente solo envía battleId + attackId en cada turno.
+ * Componente principal del sistema de combate por turnos
+ *
+ * SEGURIDAD: El cliente solo envía IDs al servidor.
+ * El servidor mantiene el estado real en Supabase.
  */
 export default function PokemonBattle({
   playerPokemonId,
   opponentPokemonId,
   onBattleEnd,
 }) {
-  const { user, isLoaded } = useUser();
-
-  // Battle identity
-  const [battleId, setBattleId] = useState(null);
-
-  // Player data (set once on init, sprites/attacks don't change)
-  const [playerPokemon, setPlayerPokemon] = useState(null);
-  const [opponentPokemon, setOpponentPokemon] = useState(null);
-
-  // HP state (updated on each attack)
-  const [playerHP, setPlayerHP] = useState(0);
-  const [playerMaxHP, setPlayerMaxHP] = useState(0);
-  const [opponentHP, setOpponentHP] = useState(0);
-  const [opponentMaxHP, setOpponentMaxHP] = useState(0);
-
-  // Messages & status
-  const [messages, setMessages] = useState([]);
-  const [battleStatus, setBattleStatus] = useState('active');
-
-  // UI state
+  const [battleState, setBattleState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const battleIdRef = useRef(null);
 
-  useEffect(() => {
-    if (playerPokemonId && opponentPokemonId) {
-      initializeBattle();
-    }
-  }, [playerPokemonId, opponentPokemonId]);
-
+  /**
+   * Inicializa la batalla enviando los IDs de Pokémon al servidor
+   */
   const initializeBattle = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      let username = null;
-      if (isLoaded && user) {
-        username =
-          user.username ||
-          user.firstName ||
-          (user.primaryEmailAddress?.emailAddress
-            ? user.primaryEmailAddress.emailAddress.split('@')[0]
-            : null) ||
-          'Player';
-      }
 
       const response = await fetch('/api/battle', {
         method: 'POST',
@@ -71,7 +39,6 @@ export default function PokemonBattle({
           action: 'init',
           playerPokemonId,
           opponentPokemonId,
-          username,
         }),
       });
 
@@ -81,24 +48,9 @@ export default function PokemonBattle({
         throw new Error(data.error || 'Error al inicializar el combate');
       }
 
-      // Store battleId and display data
-      setBattleId(data.battleId);
-      setPlayerPokemon({
-        name: data.player.pokemonName,
-        sprites: data.player.sprites,
-        attacks: data.player.attacks,
-      });
-      setOpponentPokemon({
-        name: data.opponent.pokemonName,
-        sprites: data.opponent.sprites,
-        attacks: data.opponent.attacks,
-      });
-      setPlayerHP(data.player.currentHP);
-      setPlayerMaxHP(data.player.maxHP);
-      setOpponentHP(data.opponent.currentHP);
-      setOpponentMaxHP(data.opponent.maxHP);
-      setMessages(data.messages);
-      setBattleStatus('active');
+      // Guardar battleId para futuras acciones
+      battleIdRef.current = data.battleState.battleId;
+      setBattleState(data.battleState);
     } catch (err) {
       setError(err.message);
       console.error('Error initializing battle:', err);
@@ -107,19 +59,33 @@ export default function PokemonBattle({
     }
   };
 
-  const handleAttack = async (attackId) => {
-    if (!battleId || battleStatus !== 'active' || isAttacking) return;
+  // Inicializar combate
+  useEffect(() => {
+    if (playerPokemonId && opponentPokemonId) {
+      initializeBattle();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerPokemonId, opponentPokemonId]);
+
+  /**
+   * Ejecuta un ataque enviando SOLO el battleId y attackId
+   * El servidor calcula todo y devuelve el nuevo estado
+   */
+  const handleAttack = async attackId => {
+    if (!battleState || battleState.status !== 'active' || isAttacking) {
+      return;
+    }
 
     try {
       setIsAttacking(true);
 
-      // Only send battleId + attackId (server loads state from DB)
+      // SEGURIDAD: Solo enviamos IDs, no el estado
       const response = await fetch('/api/battle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'attack',
-          battleId,
+          battleId: battleIdRef.current,
           attackId,
         }),
       });
@@ -130,19 +96,18 @@ export default function PokemonBattle({
         throw new Error(data.error || 'Error al ejecutar el ataque');
       }
 
-      // Update UI with animation delay
+      // Actualizar estado con delay para animación
       setTimeout(() => {
-        setPlayerHP(data.playerHP);
-        setOpponentHP(data.opponentHP);
-        setMessages((prev) => [...prev, ...data.messages]);
-        setBattleStatus(data.battleStatus);
+        setBattleState(data.battleState);
         setIsAttacking(false);
 
-        // If battle ended, notify parent
-        if (data.battleStatus !== 'active' && onBattleEnd) {
-          setTimeout(() => {
-            onBattleEnd(data.battleStatus);
-          }, 2000);
+        // Si el combate terminó, notificar
+        if (data.battleState.status !== 'active') {
+          if (onBattleEnd) {
+            setTimeout(() => {
+              onBattleEnd(data.battleState.status);
+            }, 2000);
+          }
         }
       }, 500);
     } catch (err) {
@@ -152,8 +117,31 @@ export default function PokemonBattle({
     }
   };
 
-  // ── Render states ──
+  /**
+   * Abandona la batalla actual
+   */
+  const handleAbandon = async () => {
+    if (!battleIdRef.current) return;
 
+    try {
+      await fetch('/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'abandon',
+          battleId: battleIdRef.current,
+        }),
+      });
+
+      if (onBattleEnd) {
+        onBattleEnd('abandoned');
+      }
+    } catch (err) {
+      console.error('Error abandoning battle:', err);
+    }
+  };
+
+  // Estado de carga
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -165,6 +153,7 @@ export default function PokemonBattle({
     );
   }
 
+  // Estado de error
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -182,21 +171,37 @@ export default function PokemonBattle({
     );
   }
 
-  if (!playerPokemon || !opponentPokemon) {
+  // Sin estado de batalla
+  if (!battleState) {
     return null;
   }
 
-  const isBattleActive = battleStatus === 'active';
+  const { player, opponent, status } = battleState;
+  const isBattleActive = status === 'active';
+
+  // Convertir mensajes al formato esperado por BattleMessages
+  const formattedMessages = (battleState.messages || []).map(msg =>
+    typeof msg === 'string' ? msg : msg.text
+  );
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-gradient-to-b from-blue-200 to-green-200 min-h-screen p-4">
-      <div className="mb-4">
+      {/* Header con navegación */}
+      <div className="mb-4 flex justify-between items-center">
         <Link
           href="/battle"
           className="inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
         >
           ← Volver
         </Link>
+        {isBattleActive && (
+          <button
+            onClick={handleAbandon}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+          >
+            Abandonar
+          </button>
+        )}
       </div>
 
       {/* Área de combate */}
@@ -205,9 +210,9 @@ export default function PokemonBattle({
         <div className="flex justify-end items-start mb-8">
           <div className="text-right mr-4">
             <BattleHPBar
-              pokemon={{ name: opponentPokemon.name }}
-              currentHP={opponentHP}
-              maxHP={opponentMaxHP}
+              pokemon={opponent.pokemon}
+              currentHP={opponent.currentHP}
+              maxHP={opponent.maxHP}
               isPlayer={false}
             />
           </div>
@@ -216,10 +221,10 @@ export default function PokemonBattle({
               isAttacking ? 'animate-bounce' : ''
             } transition-transform duration-300`}
           >
-            {opponentPokemon.sprites?.front_default && (
+            {opponent.pokemon?.sprites?.front_default && (
               <Image
-                src={opponentPokemon.sprites.front_default}
-                alt={opponentPokemon.name}
+                src={opponent.pokemon.sprites.front_default}
+                alt={opponent.pokemon.name}
                 fill
                 className="object-contain"
                 unoptimized
@@ -235,20 +240,20 @@ export default function PokemonBattle({
               isAttacking ? 'animate-pulse' : ''
             } transition-transform duration-300`}
           >
-            {playerPokemon.sprites?.back_default && (
+            {player.pokemon?.sprites?.back_default && (
               <Image
-                src={playerPokemon.sprites.back_default}
-                alt={playerPokemon.name}
+                src={player.pokemon.sprites.back_default}
+                alt={player.pokemon.name}
                 fill
                 className="object-contain"
                 unoptimized
               />
             )}
-            {!playerPokemon.sprites?.back_default &&
-              playerPokemon.sprites?.front_default && (
+            {!player.pokemon?.sprites?.back_default &&
+              player.pokemon?.sprites?.front_default && (
                 <Image
-                  src={playerPokemon.sprites.front_default}
-                  alt={playerPokemon.name}
+                  src={player.pokemon.sprites.front_default}
+                  alt={player.pokemon.name}
                   fill
                   className="object-contain scale-x-[-1]"
                   unoptimized
@@ -257,9 +262,9 @@ export default function PokemonBattle({
           </div>
           <div className="text-left ml-4">
             <BattleHPBar
-              pokemon={{ name: playerPokemon.name }}
-              currentHP={playerHP}
-              maxHP={playerMaxHP}
+              pokemon={player.pokemon}
+              currentHP={player.currentHP}
+              maxHP={player.maxHP}
               isPlayer={true}
             />
           </div>
@@ -268,17 +273,17 @@ export default function PokemonBattle({
 
       {/* Mensajes de combate */}
       <div className="mb-4">
-        <BattleMessages messages={messages} />
+        <BattleMessages messages={formattedMessages} />
       </div>
 
       {/* Acciones de combate */}
       {isBattleActive && (
         <div className="bg-white border-4 border-gray-900 rounded-lg p-4">
           <h3 className="text-lg font-bold mb-3 text-gray-800">
-            ¿Qué debería hacer {playerPokemon.name}?
+            ¿Qué debería hacer {player.pokemon?.name}?
           </h3>
           <BattleActions
-            attacks={playerPokemon.attacks}
+            attacks={player.attacks}
             onSelectAttack={handleAttack}
             disabled={isAttacking}
           />
@@ -289,24 +294,34 @@ export default function PokemonBattle({
       {!isBattleActive && (
         <div
           className={`bg-white border-4 border-gray-900 rounded-lg p-6 text-center ${
-            battleStatus === 'playerWon' ? 'bg-green-50' : 'bg-red-50'
+            status === 'player1_won' ? 'bg-green-50' : 'bg-red-50'
           }`}
         >
           <h2 className="text-2xl font-bold mb-4 text-black">
-            {battleStatus === 'playerWon' ? '¡Victoria!' : 'Derrota'}
+            {status === 'player1_won' ? '¡Victoria!' : 'Derrota'}
           </h2>
           <p className="text-lg mb-4 text-black">
-            {battleStatus === 'playerWon'
+            {status === 'player1_won'
               ? '¡Has ganado el combate!'
               : 'Has perdido el combate...'}
           </p>
           {onBattleEnd && (
             <button
-              onClick={() => onBattleEnd(battleStatus)}
+              onClick={() => onBattleEnd(status)}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
             >
               Volver
             </button>
+          )}
+        </div>
+      )}
+
+      {/* Indicador de turno */}
+      {isBattleActive && (
+        <div className="mt-4 text-center text-sm text-gray-600">
+          Turno #{battleState.turnNumber || 0}
+          {isAttacking && (
+            <span className="ml-2 animate-pulse">Procesando...</span>
           )}
         </div>
       )}

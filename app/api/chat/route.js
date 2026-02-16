@@ -1,15 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
-// Initialize Google GenAI client
-
-const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
-if (!GOOGLE_GENAI_API_KEY) {
-  throw new Error(
-    'Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.'
-  );
+// Initialize Google GenAI client lazily to avoid build-time errors
+function getGenAIClient() {
+  const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
+  if (!GOOGLE_GENAI_API_KEY) {
+    throw new Error(
+      'Missing Google GenAI API key. Please set the GOOGLE_GENAI_API_KEY environment variable.'
+    );
+  }
+  return new GoogleGenerativeAI(GOOGLE_GENAI_API_KEY);
 }
-const ai = new GoogleGenerativeAI(GOOGLE_GENAI_API_KEY);
 
 // Pokemon-specific system prompt to guide Gemini's responses
 const POKEMON_SYSTEM_PROMPT = `You are a Pokemon expert assistant. Your role is to provide helpful, accurate information about Pokemon. Follow these guidelines:
@@ -66,6 +67,7 @@ export async function POST(request) {
     const { message, conversationHistory = [] } = body;
 
     if (!message) {
+      console.warn('[Chat API] Missing message in request body');
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
@@ -84,6 +86,7 @@ export async function POST(request) {
     conversationContext += `\nUser: ${message}\n\nPlease provide a helpful response about Pokemon.`;
 
     // Generate response using Gemini
+    const ai = getGenAIClient();
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await model.generateContent(conversationContext);
 
@@ -107,7 +110,7 @@ export async function POST(request) {
           pokemonData[name.toLowerCase()] = {
             id: data.id,
             name: data.name,
-            types: data.types.map((t) => t.type.name),
+            types: data.types.map(t => t.type.name),
             sprite: data.sprites.front_default,
           };
         }

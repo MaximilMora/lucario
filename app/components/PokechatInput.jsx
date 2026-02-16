@@ -10,7 +10,7 @@ export default function PokechatInput({
       <input
         type="text"
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={e => setInput(e.target.value)}
         onKeyDown={handleEnter}
         className={`flex-1 rounded-l-md p-2 border-2 transition-colors ${
           loading

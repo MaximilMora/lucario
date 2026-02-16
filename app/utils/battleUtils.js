@@ -1,20 +1,6 @@
 // Utilidades básicas para el sistema de combate por turnos
 
 /**
- * Calcula el daño de un ataque
- * @param {number} attack - Ataque del atacante
- * @param {number} defense - Defensa del defensor
- * @param {number} baseDamage - Daño base del ataque
- * @returns {number} Daño causado
- */
-export function calculateDamage(attack, defense, baseDamage = 50) {
-  const damage = Math.floor((attack / defense) * baseDamage);
-  // Variación aleatoria (80-120%)
-  const variation = 0.8 + Math.random() * 0.4;
-  return Math.max(1, Math.floor(damage * variation));
-}
-
-/**
  * Calcula el HP máximo basado en el nivel y HP base
  * @param {number} baseHP - HP base
  * @param {number} level - Nivel (default 50)
@@ -30,7 +16,7 @@ export function calculateMaxHP(baseHP, level = 50) {
  * @returns {Array} Lista de ataques
  */
 export function getPokemonAttacks(pokemon) {
-  const types = pokemon.types?.map((t) => t.type.name) || [];
+  const types = pokemon.types?.map(t => t.type.name) || [];
   const primaryType = types[0] || 'normal';
 
   return [
@@ -45,21 +31,21 @@ export function getPokemonAttacks(pokemon) {
  * Obtiene el stat de ataque de un Pokémon
  */
 export function getAttackStat(pokemon) {
-  return pokemon.stats?.find((s) => s.stat.name === 'attack')?.base_stat || 50;
+  return pokemon.stats?.find(s => s.stat.name === 'attack')?.base_stat || 50;
 }
 
 /**
  * Obtiene el stat de defensa de un Pokémon
  */
 export function getDefenseStat(pokemon) {
-  return pokemon.stats?.find((s) => s.stat.name === 'defense')?.base_stat || 50;
+  return pokemon.stats?.find(s => s.stat.name === 'defense')?.base_stat || 50;
 }
 
 /**
  * Obtiene el stat de HP de un Pokémon
  */
 export function getHPStat(pokemon) {
-  return pokemon.stats?.find((s) => s.stat.name === 'hp')?.base_stat || 50;
+  return pokemon.stats?.find(s => s.stat.name === 'hp')?.base_stat || 50;
 }
 
 /**

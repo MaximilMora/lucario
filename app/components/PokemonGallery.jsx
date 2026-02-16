@@ -12,8 +12,9 @@ export default function PokemonGallery() {
     async function fetchPokemons() {
       setLoading(true);
       setError(null);
+      const url = 'https://pokeapi.co/api/v2/pokemon?limit=20';
       try {
-        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=20');
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch Pokémon');
         const data = await res.json();
         setPokemons(data.results);
@@ -56,7 +57,7 @@ export default function PokemonGallery() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-      {pokemons.map((pokemon) => (
+      {pokemons.map(pokemon => (
         <PokemonCard key={pokemon.name} pokemon={pokemon} />
       ))}
     </div>
