@@ -14,12 +14,12 @@ function getSupabase() {
 /**
  * GET /api/ranking
  * Obtiene el ranking de jugadores basado en rating ELO
- * 
+ *
  * Query params:
  * - limit: número de jugadores a retornar (default: 10, max: 100)
  * - offset: para paginación (default: 0)
  * - user_id: obtener posición específica de un usuario
- * 
+ *
  * Respuesta:
  * - ranking: array de jugadores con su posición
  * - total: número total de jugadores en el ranking
@@ -27,7 +27,10 @@ function getSupabase() {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '10', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const userId = searchParams.get('user_id');
 
@@ -38,7 +41,7 @@ export async function GET(request) {
           success: true,
           ranking: [],
           pagination: { total: 0, limit, offset, hasMore: false },
-          message: 'Database not configured'
+          message: 'Database not configured',
         },
         { status: 200 }
       );
@@ -87,9 +90,12 @@ export async function GET(request) {
           wins: userStats.wins,
           losses: userStats.losses,
           draws: userStats.draws,
-          winRate: userStats.total_battles > 0
-            ? Math.round((userStats.wins / userStats.total_battles) * 100 * 10) / 10
-            : 0,
+          winRate:
+            userStats.total_battles > 0
+              ? Math.round(
+                  (userStats.wins / userStats.total_battles) * 100 * 10
+                ) / 10
+              : 0,
           bestWinStreak: userStats.best_win_streak,
         },
       });
@@ -128,9 +134,10 @@ export async function GET(request) {
       wins: player.wins,
       losses: player.losses,
       draws: player.draws,
-      winRate: player.total_battles > 0
-        ? Math.round((player.wins / player.total_battles) * 100 * 10) / 10
-        : 0,
+      winRate:
+        player.total_battles > 0
+          ? Math.round((player.wins / player.total_battles) * 100 * 10) / 10
+          : 0,
       bestWinStreak: player.best_win_streak,
     }));
 

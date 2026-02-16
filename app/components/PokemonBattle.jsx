@@ -9,7 +9,7 @@ import BattleActions from './BattleActions';
 
 /**
  * Componente principal del sistema de combate por turnos
- * 
+ *
  * SEGURIDAD: El cliente solo envía IDs al servidor.
  * El servidor mantiene el estado real en Supabase.
  */
@@ -71,7 +71,7 @@ export default function PokemonBattle({
    * Ejecuta un ataque enviando SOLO el battleId y attackId
    * El servidor calcula todo y devuelve el nuevo estado
    */
-  const handleAttack = async (attackId) => {
+  const handleAttack = async attackId => {
     if (!battleState || battleState.status !== 'active' || isAttacking) {
       return;
     }
@@ -180,7 +180,7 @@ export default function PokemonBattle({
   const isBattleActive = status === 'active';
 
   // Convertir mensajes al formato esperado por BattleMessages
-  const formattedMessages = (battleState.messages || []).map((msg) =>
+  const formattedMessages = (battleState.messages || []).map(msg =>
     typeof msg === 'string' ? msg : msg.text
   );
 
@@ -320,7 +320,9 @@ export default function PokemonBattle({
       {isBattleActive && (
         <div className="mt-4 text-center text-sm text-gray-600">
           Turno #{battleState.turnNumber || 0}
-          {isAttacking && <span className="ml-2 animate-pulse">Procesando...</span>}
+          {isAttacking && (
+            <span className="ml-2 animate-pulse">Procesando...</span>
+          )}
         </div>
       )}
     </div>

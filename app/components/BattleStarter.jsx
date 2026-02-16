@@ -51,7 +51,7 @@ export default function BattleStarter() {
     }
   };
 
-  const handleBattleEnd = (result) => {
+  const handleBattleEnd = result => {
     console.log('Combate terminado:', result);
     setTimeout(() => {
       setShowBattle(false);

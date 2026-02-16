@@ -3,23 +3,29 @@
 ## Problemas Encontrados y Solucionados
 
 ### 1. **Manejo de Supabase no configurado**
+
 **Problema:** Las APIs fallaban con error 500 si Supabase no estaba configurado correctamente.
 
-**Solución:** 
+**Solución:**
+
 - Agregado helper `getSupabase()` que maneja errores gracefully
 - Las APIs ahora devuelven respuestas vacías en lugar de errores 500 cuando Supabase no está disponible
 
 ### 2. **Nombres de Pokémon faltantes en historial**
+
 **Problema:** `BattleHistory.jsx` esperaba `player_pokemon_name` pero la API solo devolvía IDs.
 
 **Solución:**
+
 - La API `/api/battles` ahora obtiene nombres de Pokémon desde PokeAPI
 - Devuelve tanto IDs como nombres para compatibilidad
 
 ### 3. **Uso de `require()` en producción**
+
 **Problema:** `require()` puede causar problemas en builds de Next.js.
 
 **Solución:**
+
 - Mantenido `require()` pero con manejo de errores
 - Las funciones ahora verifican si Supabase está disponible antes de usarlo
 

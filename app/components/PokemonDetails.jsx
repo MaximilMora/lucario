@@ -83,7 +83,7 @@ export default function PokemonDetails({ pokemonId }) {
                   width={256}
                   height={256}
                   className="w-64 h-64"
-                  onError={(e) => {
+                  onError={e => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
                   }}

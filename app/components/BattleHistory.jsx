@@ -35,7 +35,7 @@ export default function BattleHistory() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleString('es-ES', {
       year: 'numeric',
@@ -46,7 +46,7 @@ export default function BattleHistory() {
     });
   };
 
-  const getWinnerBadge = (winner) => {
+  const getWinnerBadge = winner => {
     if (winner === 'player') {
       return (
         <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
@@ -116,7 +116,7 @@ export default function BattleHistory() {
       </div>
 
       <div className="space-y-4">
-        {battles.map((battle) => (
+        {battles.map(battle => (
           <div
             key={battle.id}
             className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-400 transition-colors"

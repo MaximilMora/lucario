@@ -91,7 +91,7 @@ const channel = supabase
       table: 'matchmaking_queue',
       filter: `user_id=eq.${myUserId}`,
     },
-    (payload) => {
+    payload => {
       if (payload.new.status === 'matched') {
         goToBattle(payload.new.battle_id);
       }

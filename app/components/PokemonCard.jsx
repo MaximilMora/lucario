@@ -27,7 +27,7 @@ export default function PokemonCard({ pokemon }) {
           width={96}
           height={96}
           className="w-24 h-24"
-          onError={(e) => {
+          onError={e => {
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}

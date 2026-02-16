@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: 'Lucario - Pokemon Battle Arena',
-  description: 'Explora Pokémon, batalla contra la IA y sube en el ranking. Chat con asistente IA especializado en Pokémon.',
+  description:
+    'Explora Pokémon, batalla contra la IA y sube en el ranking. Chat con asistente IA especializado en Pokémon.',
   keywords: ['pokemon', 'battle', 'pokedex', 'game', 'ai'],
   openGraph: {
     title: 'Lucario - Pokemon Battle Arena',

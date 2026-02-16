@@ -15,10 +15,10 @@ function getSupabase() {
 /**
  * GET /api/stats
  * Obtiene las estadísticas de un usuario
- * 
+ *
  * Query params:
  * - user_id: ID del usuario (opcional si está autenticado)
- * 
+ *
  * Respuesta:
  * - stats: estadísticas del usuario (batallas, victorias, rachas, etc.)
  * - ranking: posición en el ranking y rating ELO
@@ -43,12 +43,12 @@ export async function GET(request) {
     const supabase = getSupabase();
     if (!supabase) {
       return NextResponse.json(
-        { 
+        {
           success: true,
           stats: null,
           ranking: null,
           recentBattles: [],
-          message: 'Database not configured'
+          message: 'Database not configured',
         },
         { status: 200 }
       );
@@ -83,7 +83,9 @@ export async function GET(request) {
     // Obtener últimas batallas del usuario
     const { data: recentBattles } = await supabase
       .from('battles')
-      .select('id, player1_pokemon_id, player2_pokemon_id, status, winner_user_id, total_turns, created_at')
+      .select(
+        'id, player1_pokemon_id, player2_pokemon_id, status, winner_user_id, total_turns, created_at'
+      )
       .or(`player1_user_id.eq.${userId},player2_user_id.eq.${userId}`)
       .order('created_at', { ascending: false })
       .limit(5);
@@ -91,33 +93,40 @@ export async function GET(request) {
     // Formatear respuesta
     const response = {
       success: true,
-      stats: stats ? {
-        userId: stats.user_id,
-        username: stats.username,
-        totalBattles: stats.total_battles,
-        wins: stats.wins,
-        losses: stats.losses,
-        draws: stats.draws,
-        winRate: stats.total_battles > 0 
-          ? Math.round((stats.wins / stats.total_battles) * 100 * 10) / 10 
-          : 0,
-        currentWinStreak: stats.current_win_streak,
-        bestWinStreak: stats.best_win_streak,
-        rating: stats.rating,
-        peakRating: stats.peak_rating,
-        mostUsedPokemon: stats.most_used_pokemon_id ? {
-          id: stats.most_used_pokemon_id,
-          name: stats.most_used_pokemon_name,
-          count: stats.most_used_pokemon_count,
-        } : null,
-        firstBattleAt: stats.first_battle_at,
-        lastBattleAt: stats.last_battle_at,
-      } : null,
-      ranking: stats ? {
-        position: rankPosition,
-        rating: stats.rating,
-        peakRating: stats.peak_rating,
-      } : null,
+      stats: stats
+        ? {
+            userId: stats.user_id,
+            username: stats.username,
+            totalBattles: stats.total_battles,
+            wins: stats.wins,
+            losses: stats.losses,
+            draws: stats.draws,
+            winRate:
+              stats.total_battles > 0
+                ? Math.round((stats.wins / stats.total_battles) * 100 * 10) / 10
+                : 0,
+            currentWinStreak: stats.current_win_streak,
+            bestWinStreak: stats.best_win_streak,
+            rating: stats.rating,
+            peakRating: stats.peak_rating,
+            mostUsedPokemon: stats.most_used_pokemon_id
+              ? {
+                  id: stats.most_used_pokemon_id,
+                  name: stats.most_used_pokemon_name,
+                  count: stats.most_used_pokemon_count,
+                }
+              : null,
+            firstBattleAt: stats.first_battle_at,
+            lastBattleAt: stats.last_battle_at,
+          }
+        : null,
+      ranking: stats
+        ? {
+            position: rankPosition,
+            rating: stats.rating,
+            peakRating: stats.peak_rating,
+          }
+        : null,
       recentBattles: recentBattles || [],
     };
 

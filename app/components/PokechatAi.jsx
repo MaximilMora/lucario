@@ -12,11 +12,11 @@ export default function PokechatAi() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setMessages((prev) => prev.filter((msg) => !msg.isError));
+      setMessages(prev => prev.filter(msg => !msg.isError));
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [messages.filter((msg) => msg.isError).length]);
+  }, [messages.filter(msg => msg.isError).length]);
 
   if (isMinimized) {
     return (
@@ -32,7 +32,7 @@ export default function PokechatAi() {
     if (!input.trim()) {
       console.log('Input empty, message not sent');
 
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         {
           sender: 'bot',
@@ -52,7 +52,7 @@ export default function PokechatAi() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
-          conversationHistory: messages.map((msg) => ({
+          conversationHistory: messages.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.content,
           })),
@@ -68,7 +68,7 @@ export default function PokechatAi() {
       }
 
       // Add messages to chat
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         { sender: 'user', content: input, timestamp: new Date() },
         {
@@ -83,7 +83,7 @@ export default function PokechatAi() {
     } catch (error) {
       console.error('Network error:', error);
       // Mostrar mensaje de error al usuario
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         { sender: 'user', content: input, timestamp: new Date() },
         {
@@ -98,7 +98,7 @@ export default function PokechatAi() {
       setLoading(false);
     }
   };
-  const handleEnter = (e) => {
+  const handleEnter = e => {
     if (e.key === 'Enter') {
       sendMessage();
     }

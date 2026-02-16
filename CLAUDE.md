@@ -5,6 +5,7 @@ Este archivo contiene contexto sobre el proyecto para ayudar a entender el codeb
 ## Resumen del Proyecto
 
 **Lucario** es una aplicación web de Pokémon que incluye:
+
 - Galería de Pokémon con datos de PokeAPI
 - Sistema de batallas por turnos contra IA
 - Chat con asistente IA especializado en Pokémon (Google Gemini)
@@ -13,15 +14,15 @@ Este archivo contiene contexto sobre el proyecto para ayudar a entender el codeb
 
 ## Stack Tecnológico
 
-| Categoría | Tecnología |
-|-----------|------------|
-| Frontend | React 19, Next.js 16, Tailwind CSS 4 |
-| Backend | Next.js API Routes |
-| Base de Datos | Supabase (PostgreSQL) |
-| Autenticación | Clerk |
-| IA | Google Gemini (gemini-2.5-flash) |
-| Testing | Vitest (unit), Playwright (e2e) |
-| Linting | ESLint, Prettier |
+| Categoría     | Tecnología                           |
+| ------------- | ------------------------------------ |
+| Frontend      | React 19, Next.js 16, Tailwind CSS 4 |
+| Backend       | Next.js API Routes                   |
+| Base de Datos | Supabase (PostgreSQL)                |
+| Autenticación | Clerk                                |
+| IA            | Google Gemini (gemini-2.5-flash)     |
+| Testing       | Vitest (unit), Playwright (e2e)      |
+| Linting       | ESLint, Prettier                     |
 
 ## Estructura del Proyecto
 
@@ -59,6 +60,7 @@ Cliente                    API Route                  Supabase
 ```
 
 **Principios:**
+
 1. El cliente NUNCA envía estado, solo IDs
 2. El servidor obtiene el estado de Supabase
 3. Validación de permisos en cada request
@@ -66,16 +68,17 @@ Cliente                    API Route                  Supabase
 
 ## Tablas de Supabase
 
-| Tabla | Propósito |
-|-------|-----------|
-| `battles` | Registro de batallas (metadatos) |
-| `battle_state` | Estado en tiempo real (durante combate) |
-| `battle_turns` | Historial de turnos |
-| `user_battle_stats` | Estadísticas y rating de usuarios |
+| Tabla               | Propósito                               |
+| ------------------- | --------------------------------------- |
+| `battles`           | Registro de batallas (metadatos)        |
+| `battle_state`      | Estado en tiempo real (durante combate) |
+| `battle_turns`      | Historial de turnos                     |
+| `user_battle_stats` | Estadísticas y rating de usuarios       |
 
 ## API Endpoints
 
 ### Batalla (`/api/battle`)
+
 - `POST { action: 'init', playerPokemonId, opponentPokemonId }` - Iniciar
 - `POST { action: 'attack', battleId, attackId }` - Atacar
 - `POST { action: 'getState', battleId }` - Obtener estado
@@ -83,16 +86,20 @@ Cliente                    API Route                  Supabase
 - `GET ?id=xxx` - Consultar batalla
 
 ### Historial (`/api/battles`)
+
 - `GET ?limit=10&user_id=xxx&status=xxx` - Listar batallas
 
 ### Chat (`/api/chat`)
+
 - `POST { message, conversationHistory }` - Enviar mensaje
 
 ### Ranking (`/api/ranking`)
+
 - `GET ?limit=10&offset=0` - Top ranking
 - `GET ?user_id=xxx` - Posición de usuario
 
 ### Estadísticas (`/api/stats`)
+
 - `GET ?user_id=xxx` - Stats de usuario
 
 ## Variables de Entorno

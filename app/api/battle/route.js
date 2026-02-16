@@ -10,8 +10,7 @@ export const maxDuration = 30;
 // Modo desarrollo sin base de datos (usa memoria)
 const SKIP_SUPABASE_ENV = process.env.SKIP_SUPABASE === 'true';
 const HAS_SUPABASE_KEYS = !!(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 const USE_IN_MEMORY_DB = SKIP_SUPABASE_ENV || !HAS_SUPABASE_KEYS;
 
@@ -53,8 +52,8 @@ async function fetchPokemonData(pokemonNameOrId) {
  * Extrae stats de un Pokémon
  */
 function extractPokemonStats(pokemonData) {
-  const getStat = (name) =>
-    pokemonData.stats?.find((s) => s.stat.name === name)?.base_stat || 50;
+  const getStat = name =>
+    pokemonData.stats?.find(s => s.stat.name === name)?.base_stat || 50;
 
   const baseHP = getStat('hp');
   const level = 50;
@@ -72,7 +71,7 @@ function extractPokemonStats(pokemonData) {
  * Genera ataques para un Pokémon basados en su tipo
  */
 function generatePokemonAttacks(pokemonData) {
-  const types = pokemonData.types?.map((t) => t.type.name) || ['normal'];
+  const types = pokemonData.types?.map(t => t.type.name) || ['normal'];
   const primaryType = types[0];
 
   return [
@@ -103,7 +102,12 @@ function calculateDamage(attackStat, defenseStat, movePower) {
 /**
  * Crea el registro de batalla en la tabla `battles`
  */
-async function createBattle({ player1UserId, player1Username, player1PokemonId, player2PokemonId }) {
+async function createBattle({
+  player1UserId,
+  player1Username,
+  player1PokemonId,
+  player2PokemonId,
+}) {
   // Modo en memoria para desarrollo
   if (USE_IN_MEMORY_DB) {
     const battleId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -164,7 +168,7 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
     player1_attack: player1Stats.attack,
     player1_defense: player1Stats.defense,
     player1_speed: player1Stats.speed,
-    player1_types: player1Data.types?.map((t) => t.type.name) || [],
+    player1_types: player1Data.types?.map(t => t.type.name) || [],
     player1_attacks: generatePokemonAttacks(player1Data),
     player1_sprite_front: player1Data.sprites?.front_default,
     player1_sprite_back: player1Data.sprites?.back_default,
@@ -176,7 +180,7 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
     player2_attack: player2Stats.attack,
     player2_defense: player2Stats.defense,
     player2_speed: player2Stats.speed,
-    player2_types: player2Data.types?.map((t) => t.type.name) || [],
+    player2_types: player2Data.types?.map(t => t.type.name) || [],
     player2_attacks: generatePokemonAttacks(player2Data),
     player2_sprite_front: player2Data.sprites?.front_default,
     player2_sprite_back: player2Data.sprites?.back_default,
@@ -300,7 +304,11 @@ async function updateBattleState(battleId, updates) {
 async function logBattleTurn(turnData) {
   // Modo en memoria - solo log
   if (USE_IN_MEMORY_DB) {
-    console.log('[DEV MODE] Turn logged:', turnData.turn_number, turnData.attack_name);
+    console.log(
+      '[DEV MODE] Turn logged:',
+      turnData.turn_number,
+      turnData.attack_name
+    );
     return;
   }
 
@@ -324,8 +332,10 @@ async function finalizeBattle(battleId, winnerSide, totalTurns) {
   if (!battle) return;
 
   const status = winnerSide === 'player1' ? 'player1_won' : 'player2_won';
-  const winnerUserId = winnerSide === 'player1' ? battle.player1_user_id : battle.player2_user_id;
-  const loserUserId = winnerSide === 'player1' ? battle.player2_user_id : battle.player1_user_id;
+  const winnerUserId =
+    winnerSide === 'player1' ? battle.player1_user_id : battle.player2_user_id;
+  const loserUserId =
+    winnerSide === 'player1' ? battle.player2_user_id : battle.player1_user_id;
 
   // Batalla en memoria (incluye fallback cuando Supabase falló)
   if (inMemoryBattles.has(battleId)) {
@@ -549,7 +559,8 @@ export async function POST(request) {
       }
 
       const player1UserId = clerkUserId || 'guest';
-      const player1Username = username || (player1UserId === 'guest' ? 'Guest' : 'Player');
+      const player1Username =
+        username || (player1UserId === 'guest' ? 'Guest' : 'Player');
 
       let battleId;
       try {
@@ -565,7 +576,10 @@ export async function POST(request) {
           player2Data,
         });
       } catch (dbError) {
-        console.error('Supabase battle init failed, using in-memory fallback:', dbError?.message);
+        console.error(
+          'Supabase battle init failed, using in-memory fallback:',
+          dbError?.message
+        );
         // Fallback: crear batalla en memoria para esta request
         battleId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         inMemoryBattles.set(battleId, {
@@ -588,7 +602,7 @@ export async function POST(request) {
           player1_attack: extractPokemonStats(player1Data).attack,
           player1_defense: extractPokemonStats(player1Data).defense,
           player1_speed: extractPokemonStats(player1Data).speed,
-          player1_types: player1Data.types?.map((t) => t.type.name) || [],
+          player1_types: player1Data.types?.map(t => t.type.name) || [],
           player1_attacks: generatePokemonAttacks(player1Data),
           player1_sprite_front: player1Data.sprites?.front_default,
           player1_sprite_back: player1Data.sprites?.back_default,
@@ -599,7 +613,7 @@ export async function POST(request) {
           player2_attack: extractPokemonStats(player2Data).attack,
           player2_defense: extractPokemonStats(player2Data).defense,
           player2_speed: extractPokemonStats(player2Data).speed,
-          player2_types: player2Data.types?.map((t) => t.type.name) || [],
+          player2_types: player2Data.types?.map(t => t.type.name) || [],
           player2_attacks: generatePokemonAttacks(player2Data),
           player2_sprite_front: player2Data.sprites?.front_default,
           player2_sprite_back: player2Data.sprites?.back_default,
@@ -607,7 +621,10 @@ export async function POST(request) {
           turn_number: 0,
           status: 'active',
           messages: [
-            { text: `¡${player1Data.name} vs ${player2Data.name}!`, type: 'system' },
+            {
+              text: `¡${player1Data.name} vs ${player2Data.name}!`,
+              type: 'system',
+            },
             { text: '¡Comienza el combate!', type: 'system' },
           ],
         };
@@ -653,7 +670,10 @@ export async function POST(request) {
 
       // Validar que el usuario es dueño de la batalla
       const userId = clerkUserId || 'guest';
-      if (battle.player1_user_id !== userId && battle.player1_user_id !== 'guest') {
+      if (
+        battle.player1_user_id !== userId &&
+        battle.player1_user_id !== 'guest'
+      ) {
         return NextResponse.json(
           { error: 'Unauthorized - This is not your battle' },
           { status: 403 }
@@ -679,19 +699,13 @@ export async function POST(request) {
 
       // Validar que es el turno del jugador
       if (state.current_turn !== 'player1') {
-        return NextResponse.json(
-          { error: 'Not your turn' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Not your turn' }, { status: 400 });
       }
 
       // Validar que el ataque existe
-      const selectedAttack = state.player1_attacks.find((a) => a.id === attackId);
+      const selectedAttack = state.player1_attacks.find(a => a.id === attackId);
       if (!selectedAttack) {
-        return NextResponse.json(
-          { error: 'Invalid attack' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid attack' }, { status: 400 });
       }
 
       const messages = [...(state.messages || [])];
@@ -712,8 +726,14 @@ export async function POST(request) {
       newPlayer2HP = Math.max(0, newPlayer2HP - player1Damage);
       turnNumber += 1;
 
-      messages.push({ text: `${state.player1_pokemon_name} usó ${selectedAttack.name}!`, type: 'attack' });
-      messages.push({ text: `${state.player2_pokemon_name} recibió ${player1Damage} de daño.`, type: 'damage' });
+      messages.push({
+        text: `${state.player1_pokemon_name} usó ${selectedAttack.name}!`,
+        type: 'attack',
+      });
+      messages.push({
+        text: `${state.player2_pokemon_name} recibió ${player1Damage} de daño.`,
+        type: 'damage',
+      });
 
       // Registrar turno del jugador
       await logBattleTurn({
@@ -738,7 +758,10 @@ export async function POST(request) {
       if (newPlayer2HP <= 0) {
         newPlayer2HP = 0;
         newStatus = 'player1_won';
-        messages.push({ text: `¡${state.player2_pokemon_name} se debilitó!`, type: 'faint' });
+        messages.push({
+          text: `¡${state.player2_pokemon_name} se debilitó!`,
+          type: 'faint',
+        });
         messages.push({ text: '¡Has ganado el combate!', type: 'victory' });
 
         // Actualizar estado y finalizar
@@ -755,22 +778,30 @@ export async function POST(request) {
         // Si el estado fue eliminado, construir respuesta manual
         return NextResponse.json({
           success: true,
-          battleState: finalState ? formatBattleStateForClient(finalState) : {
-            battleId,
-            turnNumber,
-            status: newStatus,
-            messages,
-            player: {
-              pokemon: { id: state.player1_pokemon_id, name: state.player1_pokemon_name },
-              currentHP: newPlayer1HP,
-              maxHP: state.player1_max_hp,
-            },
-            opponent: {
-              pokemon: { id: state.player2_pokemon_id, name: state.player2_pokemon_name },
-              currentHP: 0,
-              maxHP: state.player2_max_hp,
-            },
-          },
+          battleState: finalState
+            ? formatBattleStateForClient(finalState)
+            : {
+                battleId,
+                turnNumber,
+                status: newStatus,
+                messages,
+                player: {
+                  pokemon: {
+                    id: state.player1_pokemon_id,
+                    name: state.player1_pokemon_name,
+                  },
+                  currentHP: newPlayer1HP,
+                  maxHP: state.player1_max_hp,
+                },
+                opponent: {
+                  pokemon: {
+                    id: state.player2_pokemon_id,
+                    name: state.player2_pokemon_name,
+                  },
+                  currentHP: 0,
+                  maxHP: state.player2_max_hp,
+                },
+              },
         });
       }
 
@@ -800,8 +831,14 @@ export async function POST(request) {
       newPlayer1HP = Math.max(0, newPlayer1HP - player2Damage);
       turnNumber += 1;
 
-      messages.push({ text: `${state.player2_pokemon_name} usó ${aiAttack.name}!`, type: 'attack' });
-      messages.push({ text: `${state.player1_pokemon_name} recibió ${player2Damage} de daño.`, type: 'damage' });
+      messages.push({
+        text: `${state.player2_pokemon_name} usó ${aiAttack.name}!`,
+        type: 'attack',
+      });
+      messages.push({
+        text: `${state.player1_pokemon_name} recibió ${player2Damage} de daño.`,
+        type: 'damage',
+      });
 
       // Registrar turno de la IA
       await logBattleTurn({
@@ -826,7 +863,10 @@ export async function POST(request) {
       if (newPlayer1HP <= 0) {
         newPlayer1HP = 0;
         newStatus = 'player2_won';
-        messages.push({ text: `¡${state.player1_pokemon_name} se debilitó!`, type: 'faint' });
+        messages.push({
+          text: `¡${state.player1_pokemon_name} se debilitó!`,
+          type: 'faint',
+        });
         messages.push({ text: 'Has perdido el combate...', type: 'defeat' });
 
         // Actualizar estado y finalizar
@@ -843,22 +883,30 @@ export async function POST(request) {
         const finalState = await getBattleState(battleId);
         return NextResponse.json({
           success: true,
-          battleState: finalState ? formatBattleStateForClient(finalState) : {
-            battleId,
-            turnNumber,
-            status: newStatus,
-            messages,
-            player: {
-              pokemon: { id: state.player1_pokemon_id, name: state.player1_pokemon_name },
-              currentHP: 0,
-              maxHP: state.player1_max_hp,
-            },
-            opponent: {
-              pokemon: { id: state.player2_pokemon_id, name: state.player2_pokemon_name },
-              currentHP: newPlayer2HP,
-              maxHP: state.player2_max_hp,
-            },
-          },
+          battleState: finalState
+            ? formatBattleStateForClient(finalState)
+            : {
+                battleId,
+                turnNumber,
+                status: newStatus,
+                messages,
+                player: {
+                  pokemon: {
+                    id: state.player1_pokemon_id,
+                    name: state.player1_pokemon_name,
+                  },
+                  currentHP: 0,
+                  maxHP: state.player1_max_hp,
+                },
+                opponent: {
+                  pokemon: {
+                    id: state.player2_pokemon_id,
+                    name: state.player2_pokemon_name,
+                  },
+                  currentHP: newPlayer2HP,
+                  maxHP: state.player2_max_hp,
+                },
+              },
         });
       }
 
@@ -905,11 +953,11 @@ export async function POST(request) {
 
       // Validar permisos
       const userId = clerkUserId || 'guest';
-      if (battle.player1_user_id !== userId && battle.player1_user_id !== 'guest') {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+      if (
+        battle.player1_user_id !== userId &&
+        battle.player1_user_id !== 'guest'
+      ) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       const state = await getBattleState(battleId);
@@ -949,11 +997,11 @@ export async function POST(request) {
 
       // Validar permisos
       const userId = clerkUserId || 'guest';
-      if (battle.player1_user_id !== userId && battle.player1_user_id !== 'guest') {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+      if (
+        battle.player1_user_id !== userId &&
+        battle.player1_user_id !== 'guest'
+      ) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       // Batalla en memoria
@@ -985,10 +1033,7 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json(
-      { error: 'Invalid action' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Battle API Error:', error);
     return NextResponse.json(
@@ -1017,21 +1062,17 @@ export async function GET(request) {
 
     const battle = await getBattle(battleId);
     if (!battle) {
-      return NextResponse.json(
-        { error: 'Battle not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Battle not found' }, { status: 404 });
     }
 
     // Validar permisos
     const userId = clerkUserId || 'guest';
-    if (battle.player1_user_id !== userId && 
-        battle.player2_user_id !== userId && 
-        battle.player1_user_id !== 'guest') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      );
+    if (
+      battle.player1_user_id !== userId &&
+      battle.player2_user_id !== userId &&
+      battle.player1_user_id !== 'guest'
+    ) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const state = await getBattleState(battleId);

@@ -22,62 +22,62 @@
 
 Información básica de cada batalla (metadatos).
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID | ID único de la batalla |
-| `player1_user_id` | TEXT | ID de Clerk del jugador 1 |
-| `player2_user_id` | TEXT | ID del jugador 2 ('ai' para CPU) |
-| `player1_pokemon_id` | INTEGER | ID del Pokémon del jugador 1 |
-| `player2_pokemon_id` | INTEGER | ID del Pokémon del jugador 2 |
-| `status` | TEXT | 'active', 'player1_won', 'player2_won', 'draw', 'abandoned' |
-| `winner_user_id` | TEXT | ID del ganador (NULL si activa/empate) |
-| `total_turns` | INTEGER | Total de turnos al finalizar |
+| Campo                | Tipo    | Descripción                                                 |
+| -------------------- | ------- | ----------------------------------------------------------- |
+| `id`                 | UUID    | ID único de la batalla                                      |
+| `player1_user_id`    | TEXT    | ID de Clerk del jugador 1                                   |
+| `player2_user_id`    | TEXT    | ID del jugador 2 ('ai' para CPU)                            |
+| `player1_pokemon_id` | INTEGER | ID del Pokémon del jugador 1                                |
+| `player2_pokemon_id` | INTEGER | ID del Pokémon del jugador 2                                |
+| `status`             | TEXT    | 'active', 'player1_won', 'player2_won', 'draw', 'abandoned' |
+| `winner_user_id`     | TEXT    | ID del ganador (NULL si activa/empate)                      |
+| `total_turns`        | INTEGER | Total de turnos al finalizar                                |
 
 ### 2. `battle_state` - Estado en Tiempo Real
 
 **FUENTE DE VERDAD** durante el combate. El cliente NUNCA modifica esto directamente.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `battle_id` | UUID | FK a battles |
-| `player1_current_hp` | INTEGER | HP actual del Pokémon 1 |
-| `player1_max_hp` | INTEGER | HP máximo |
-| `player1_attack` | INTEGER | Stat de ataque |
-| `player1_defense` | INTEGER | Stat de defensa |
-| `player1_attacks` | JSONB | Ataques disponibles |
-| `current_turn` | TEXT | 'player1' o 'player2' |
-| `turn_number` | INTEGER | Número de turno actual |
-| `status` | TEXT | Estado de la batalla |
-| `messages` | JSONB | Últimos mensajes para UI |
+| Campo                | Tipo    | Descripción              |
+| -------------------- | ------- | ------------------------ |
+| `battle_id`          | UUID    | FK a battles             |
+| `player1_current_hp` | INTEGER | HP actual del Pokémon 1  |
+| `player1_max_hp`     | INTEGER | HP máximo                |
+| `player1_attack`     | INTEGER | Stat de ataque           |
+| `player1_defense`    | INTEGER | Stat de defensa          |
+| `player1_attacks`    | JSONB   | Ataques disponibles      |
+| `current_turn`       | TEXT    | 'player1' o 'player2'    |
+| `turn_number`        | INTEGER | Número de turno actual   |
+| `status`             | TEXT    | Estado de la batalla     |
+| `messages`           | JSONB   | Últimos mensajes para UI |
 
 ### 3. `battle_turns` - Historial de Turnos
 
 Registro inmutable de cada acción (para auditoría/replay).
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `battle_id` | UUID | FK a battles |
-| `turn_number` | INTEGER | Número de turno |
-| `player_side` | TEXT | 'player1' o 'player2' |
-| `action_type` | TEXT | 'attack', 'switch', 'item', 'flee' |
-| `attack_name` | TEXT | Nombre del ataque usado |
-| `damage_dealt` | INTEGER | Daño causado |
-| `target_hp_before` | INTEGER | HP del objetivo antes |
-| `target_hp_after` | INTEGER | HP del objetivo después |
+| Campo              | Tipo    | Descripción                        |
+| ------------------ | ------- | ---------------------------------- |
+| `battle_id`        | UUID    | FK a battles                       |
+| `turn_number`      | INTEGER | Número de turno                    |
+| `player_side`      | TEXT    | 'player1' o 'player2'              |
+| `action_type`      | TEXT    | 'attack', 'switch', 'item', 'flee' |
+| `attack_name`      | TEXT    | Nombre del ataque usado            |
+| `damage_dealt`     | INTEGER | Daño causado                       |
+| `target_hp_before` | INTEGER | HP del objetivo antes              |
+| `target_hp_after`  | INTEGER | HP del objetivo después            |
 
 ### 4. `user_battle_stats` - Estadísticas de Usuario
 
 Datos agregados para ranking y perfil.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `user_id` | TEXT | ID único del usuario |
-| `total_battles` | INTEGER | Total de batallas |
-| `wins` | INTEGER | Victorias |
-| `losses` | INTEGER | Derrotas |
-| `rating` | INTEGER | Rating ELO (default 1000) |
-| `current_win_streak` | INTEGER | Racha actual |
-| `best_win_streak` | INTEGER | Mejor racha histórica |
+| Campo                | Tipo    | Descripción               |
+| -------------------- | ------- | ------------------------- |
+| `user_id`            | TEXT    | ID único del usuario      |
+| `total_battles`      | INTEGER | Total de batallas         |
+| `wins`               | INTEGER | Victorias                 |
+| `losses`             | INTEGER | Derrotas                  |
+| `rating`             | INTEGER | Rating ELO (default 1000) |
+| `current_win_streak` | INTEGER | Racha actual              |
+| `best_win_streak`    | INTEGER | Mejor racha histórica     |
 
 ## Flujo de una Batalla
 
@@ -158,12 +158,12 @@ POST /api/battle
 
 ### Políticas Implementadas
 
-| Tabla | SELECT | INSERT | UPDATE | DELETE |
-|-------|--------|--------|--------|--------|
-| `battles` | Solo propias | Solo como player1 | Solo sistema | No |
-| `battle_state` | Solo propias | Solo sistema | Solo sistema | Solo sistema |
-| `battle_turns` | Solo propias | Solo sistema | No | No |
-| `user_battle_stats` | Público | Solo sistema | Solo sistema | No |
+| Tabla               | SELECT       | INSERT            | UPDATE       | DELETE       |
+| ------------------- | ------------ | ----------------- | ------------ | ------------ |
+| `battles`           | Solo propias | Solo como player1 | Solo sistema | No           |
+| `battle_state`      | Solo propias | Solo sistema      | Solo sistema | Solo sistema |
+| `battle_turns`      | Solo propias | Solo sistema      | No           | No           |
+| `user_battle_stats` | Público      | Solo sistema      | Solo sistema | No           |
 
 ### Cómo Funciona
 
@@ -191,7 +191,7 @@ SELECT * FROM public_ranking LIMIT 10;
 ### Obtener historial de batalla
 
 ```sql
-SELECT 
+SELECT
   bt.turn_number,
   bt.player_side,
   bt.attack_name,
@@ -205,7 +205,7 @@ ORDER BY bt.turn_number;
 ### Estadísticas de un usuario
 
 ```sql
-SELECT 
+SELECT
   total_battles,
   wins,
   losses,

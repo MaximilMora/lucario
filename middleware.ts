@@ -39,7 +39,11 @@ export default clerkMiddleware(
         // Permitir iframe de Vercel Live en previews
         'frame-src': ['self', 'https://vercel.live'],
         // Permitir sprites de Pokémon (PokeAPI sprites en GitHub)
-        'img-src': ['self', 'https://img.clerk.com', 'https://raw.githubusercontent.com'],
+        'img-src': [
+          'self',
+          'https://img.clerk.com',
+          'https://raw.githubusercontent.com',
+        ],
       },
     },
   }

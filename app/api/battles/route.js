@@ -32,20 +32,20 @@ async function getPokemonName(pokemonId) {
 /**
  * GET /api/battles
  * Obtiene el historial de batallas
- * 
+ *
  * Query params:
  * - limit: número de batallas a retornar (default: 10, max: 50)
  * - offset: para paginación (default: 0)
  * - user_id: filtrar por usuario específico
  * - status: filtrar por estado ('active', 'player1_won', 'player2_won', 'draw', 'abandoned')
- * 
+ *
  * Nota: La creación y gestión de batallas activas se hace en /api/battle
  */
 export async function GET(request) {
   try {
     const { userId: clerkUserId } = await auth();
     const { searchParams } = new URL(request.url);
-    
+
     const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const filterUserId = searchParams.get('user_id');
@@ -54,11 +54,11 @@ export async function GET(request) {
     const supabase = getSupabase();
     if (!supabase) {
       return NextResponse.json(
-        { 
-          success: true, 
+        {
+          success: true,
           battles: [],
           pagination: { total: 0, limit, offset, hasMore: false },
-          message: 'Database not configured'
+          message: 'Database not configured',
         },
         { status: 200 }
       );
@@ -72,7 +72,9 @@ export async function GET(request) {
 
     // Filtrar por usuario si se especifica
     if (filterUserId) {
-      query = query.or(`player1_user_id.eq.${filterUserId},player2_user_id.eq.${filterUserId}`);
+      query = query.or(
+        `player1_user_id.eq.${filterUserId},player2_user_id.eq.${filterUserId}`
+      );
     }
 
     // Filtrar por estado si se especifica
@@ -95,7 +97,7 @@ export async function GET(request) {
 
     // Formatear batallas para la respuesta con nombres de Pokémon
     const battles = await Promise.all(
-      (data || []).map(async (battle) => {
+      (data || []).map(async battle => {
         // Obtener nombres de Pokémon en paralelo
         const [player1Name, player2Name] = await Promise.all([
           getPokemonName(battle.player1_pokemon_id),
@@ -114,8 +116,10 @@ export async function GET(request) {
 
         return {
           id: battle.id,
-          player_pokemon_name: player1Name || `Pokemon #${battle.player1_pokemon_id}`,
-          opponent_pokemon_name: player2Name || `Pokemon #${battle.player2_pokemon_id}`,
+          player_pokemon_name:
+            player1Name || `Pokemon #${battle.player1_pokemon_id}`,
+          opponent_pokemon_name:
+            player2Name || `Pokemon #${battle.player2_pokemon_id}`,
           player1: {
             userId: battle.player1_user_id,
             username: battle.player1_username,
@@ -162,6 +166,6 @@ export async function GET(request) {
 /**
  * GET /api/battles/[id]
  * Obtiene los detalles de una batalla específica incluyendo el historial de turnos
- * 
+ *
  * Nota: Para obtener una batalla específica, usar /api/battle?id=xxx
  */

@@ -20,7 +20,7 @@ export default function BattleActions({
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {attacks.map((attack) => (
+      {attacks.map(attack => (
         <button
           key={attack.id}
           onClick={() => onSelectAttack(attack.id)}
