@@ -518,6 +518,7 @@ export async function POST(request) {
     const clerkUserId = await getAuthUserId();
     const body = await parseBody(request);
     if (body == null) {
+      console.warn('[Battle API] Invalid request body (JSON required)');
       return NextResponse.json(
         { error: 'Invalid request body (JSON required)' },
         { status: 400 }
@@ -526,6 +527,7 @@ export async function POST(request) {
     const { action } = body;
 
     if (!action) {
+      console.warn('[Battle API] Missing action in request body');
       return NextResponse.json(
         { error: 'Action is required' },
         { status: 400 }

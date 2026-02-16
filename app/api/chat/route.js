@@ -67,6 +67,7 @@ export async function POST(request) {
     const { message, conversationHistory = [] } = body;
 
     if (!message) {
+      console.warn('[Chat API] Missing message in request body');
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
