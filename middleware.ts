@@ -18,9 +18,18 @@ export default clerkMiddleware(
     contentSecurityPolicy: {
       directives: {
         // Permitir fetch a PokeAPI desde el cliente (galería, etc.)
-        'connect-src': ['https://pokeapi.co'],
+        // Incluir dominios de Clerk para evitar errores de autenticación
+        'connect-src': [
+          'self',
+          'https://pokeapi.co',
+          'https://clerk-telemetry.com',
+          'https://*.clerk-telemetry.com',
+          'https://api.stripe.com',
+          'https://relaxing-malamute-31.clerk.accounts.dev',
+          'https://*.clerk.accounts.dev',
+        ],
         // Permitir iframe de Vercel Live en previews
-        'frame-src': ['https://vercel.live'],
+        'frame-src': ['self', 'https://vercel.live'],
         // Permitir sprites de Pokémon (PokeAPI sprites en GitHub)
         'img-src': ['self', 'https://img.clerk.com', 'https://raw.githubusercontent.com'],
       },
