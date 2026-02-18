@@ -141,6 +141,23 @@ export default function BattleStarter() {
 
         {!battleMode && <BattleModeSelector onSelect={setBattleMode} />}
 
+        {battleMode && (
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setBattleMode(null);
+                setPlayerPokemonId(null);
+                setSelectedOpponent(null);
+                setShowWaitingLobby(false);
+              }}
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+            >
+              ← Cambiar modo de batalla
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
