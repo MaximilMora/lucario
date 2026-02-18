@@ -134,16 +134,16 @@ export default function WaitingLobby({
   return (
     <div className="text-center py-8">
       {joining ? (
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
       ) : null}
-      <p className="text-lg font-semibold text-gray-800 mb-6">
+      <p className="text-lg font-semibold text-gray-900 mb-6">
         {joining ? 'Uniendo a la cola...' : 'Esperando rival...'}
       </p>
       <button
         type="button"
         onClick={handleLeave}
         disabled={joining}
-        className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 font-semibold"
+        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 font-semibold transition-colors"
       >
         Cancelar
       </button>

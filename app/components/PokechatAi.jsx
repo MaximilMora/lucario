@@ -20,7 +20,7 @@ export default function PokechatAi() {
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-0 right-0 w-80 h-20 max-w-sm bg-white text-black border-gray-300 border-2 shadow-xl z-50 flex flex-col">
+      <div className="fixed bottom-0 right-0 w-80 h-20 max-w-sm bg-white rounded-t-xl shadow-md border border-gray-100 z-50 flex flex-col">
         <PokechatHeader
           isMinimized={isMinimized}
           setIsMinimized={setIsMinimized}
@@ -105,7 +105,7 @@ export default function PokechatAi() {
   };
 
   return (
-    <div className="fixed bottom-0 right-0 w-80 h-96 max-w-sm bg-white text-black border-gray-300 border-2 rounded-lg shadow-xl z-50 flex flex-col">
+    <div className="fixed bottom-0 right-0 w-80 h-96 max-w-sm bg-white rounded-t-xl shadow-md border border-gray-100 z-50 flex flex-col">
       <PokechatHeader
         isMinimized={isMinimized}
         setIsMinimized={setIsMinimized}
