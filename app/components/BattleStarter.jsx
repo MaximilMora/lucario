@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { capitalize } from '../utils/battleUtils';
 import PokemonBattle from './PokemonBattle';
+import BattleModeSelector from './BattleModeSelector';
+import WaitingLobby from './WaitingLobby';
+import PvPBattle from './PvPBattle';
 
 /**
- * Componente para iniciar un combate
+ * Componente para iniciar un combate (vs AI o vs Jugador PvP).
  */
 export default function BattleStarter() {
   const [pokemons, setPokemons] = useState([]);
@@ -15,6 +18,9 @@ export default function BattleStarter() {
   const [opponentPokemonId, setOpponentPokemonId] = useState(null);
   const [showBattle, setShowBattle] = useState(false);
   const [selectedOpponent, setSelectedOpponent] = useState(null);
+  const [battleMode, setBattleMode] = useState(null);
+  const [showWaitingLobby, setShowWaitingLobby] = useState(false);
+  const [pvpBattleId, setPvpBattleId] = useState(null);
 
   useEffect(() => {
     fetchPokemons();
@@ -60,6 +66,41 @@ export default function BattleStarter() {
     }, 3000);
   };
 
+  const handlePvPBattleEnd = () => {
+    setPvpBattleId(null);
+    setPlayerPokemonId(null);
+  };
+
+  if (pvpBattleId) {
+    return (
+      <PvPBattle battleId={pvpBattleId} onBattleEnd={handlePvPBattleEnd} />
+    );
+  }
+
+  if (showWaitingLobby && battleMode === 'pvp' && playerPokemonId) {
+    const selectedPokemon = pokemons[playerPokemonId - 1];
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-gradient-to-b from-blue-200 to-green-200 min-h-screen p-4">
+        <div className="mb-4">
+          <Link
+            href="/battle"
+            className="inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold"
+          >
+            ← Volver
+          </Link>
+        </div>
+        <div className="bg-white border-4 border-gray-900 rounded-lg p-6">
+          <WaitingLobby
+            pokemonId={playerPokemonId}
+            pokemonName={selectedPokemon?.name}
+            onMatched={setPvpBattleId}
+            onCancel={() => setShowWaitingLobby(false)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (showBattle && playerPokemonId && opponentPokemonId) {
     return (
       <PokemonBattle
@@ -84,9 +125,21 @@ export default function BattleStarter() {
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
           Sistema de Combate Pokémon
         </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Selecciona tu Pokémon. El oponente será elegido al azar.
-        </p>
+        {!battleMode ? (
+          <p className="text-center text-gray-600 mb-4">
+            Elige el modo de batalla y tu Pokémon.
+          </p>
+        ) : battleMode === 'ai' ? (
+          <p className="text-center text-gray-600 mb-4">
+            Selecciona tu Pokémon. El oponente será elegido al azar.
+          </p>
+        ) : (
+          <p className="text-center text-gray-600 mb-4">
+            Selecciona tu Pokémon y busca un rival en línea.
+          </p>
+        )}
+
+        {!battleMode && <BattleModeSelector onSelect={setBattleMode} />}
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -128,8 +181,8 @@ export default function BattleStarter() {
               </div>
             </div>
 
-            {/* Información del oponente aleatorio */}
-            {selectedOpponent && (
+            {/* Información del oponente (solo modo AI) */}
+            {battleMode === 'ai' && selectedOpponent && (
               <div className="mt-6 p-4 bg-red-50 border-2 border-red-500 rounded-lg">
                 <h3 className="text-lg font-bold text-red-600 mb-2">
                   Pokémon Rival (Aleatorio)
@@ -142,26 +195,59 @@ export default function BattleStarter() {
                 </p>
               </div>
             )}
+            {battleMode === 'pvp' && playerPokemonId && (
+              <div className="mt-6 p-4 bg-purple-50 border-2 border-purple-500 rounded-lg">
+                <p className="text-gray-700">
+                  Tu Pokémon:{' '}
+                  <span className="font-bold">
+                    {capitalize(pokemons[playerPokemonId - 1]?.name)}
+                  </span>
+                  . Haz clic en Buscar rival para entrar en la cola.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Botón para iniciar combate */}
+        {/* Botón para iniciar / buscar */}
         <div className="mt-8 text-center">
-          <button
-            onClick={handleStartBattle}
-            disabled={!playerPokemonId || loading}
-            className={`
-              px-8 py-4 text-xl font-bold rounded-lg
-              transition-all duration-200
-              ${
-                playerPokemonId && !loading
-                  ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
-                  : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-              }
-            `}
-          >
-            {playerPokemonId ? '¡Comenzar Combate!' : 'Selecciona tu Pokémon'}
-          </button>
+          {battleMode === 'ai' && (
+            <button
+              onClick={handleStartBattle}
+              disabled={!playerPokemonId || loading}
+              className={`
+                px-8 py-4 text-xl font-bold rounded-lg transition-all duration-200
+                ${
+                  playerPokemonId && !loading
+                    ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                }
+              `}
+            >
+              {playerPokemonId ? '¡Comenzar Combate!' : 'Selecciona tu Pokémon'}
+            </button>
+          )}
+          {battleMode === 'pvp' && (
+            <button
+              onClick={() => setShowWaitingLobby(true)}
+              disabled={!playerPokemonId || loading}
+              className={`
+                px-8 py-4 text-xl font-bold rounded-lg transition-all duration-200
+                ${
+                  playerPokemonId && !loading
+                    ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                }
+              `}
+            >
+              {playerPokemonId ? 'Buscar rival' : 'Selecciona tu Pokémon'}
+            </button>
+          )}
+          {!battleMode && (
+            <p className="text-gray-500 mt-4">
+              Selecciona un modo y tu Pokémon para continuar.
+            </p>
+          )}
         </div>
       </div>
     </div>
