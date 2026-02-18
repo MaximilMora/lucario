@@ -24,15 +24,19 @@ export default function BattleHPBar({
 
   return (
     <div
-      className={`w-full ${isPlayer ? 'bg-blue-100' : 'bg-red-100'} border-2 border-gray-800 rounded p-2`}
+      className={`w-full rounded-xl shadow-sm p-2 ${
+        isPlayer ? 'bg-gray-100' : 'bg-gray-50'
+      }`}
     >
       <div className="flex justify-between items-center mb-1">
-        <span className="font-bold text-sm">{displayName}</span>
-        <span className="text-xs font-semibold">
+        <span className="font-semibold text-sm text-gray-800">
+          {displayName}
+        </span>
+        <span className="text-xs text-gray-600">
           HP: {Math.floor(currentHP)} / {maxHP}
         </span>
       </div>
-      <div className="w-full bg-gray-300 border-2 border-gray-800 rounded h-4 overflow-hidden">
+      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
         <div
           className={`h-full ${hpColor} transition-all duration-500 ease-out`}
           style={{ width: `${hpPercentage}%` }}

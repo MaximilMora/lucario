@@ -56,10 +56,13 @@ export default function PokemonGallery() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-      {pokemons.map(pokemon => (
-        <PokemonCard key={pokemon.name} pokemon={pokemon} />
-      ))}
-    </div>
+    <section className="mb-12">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Galería Pokémon</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
+        {pokemons.map(pokemon => (
+          <PokemonCard key={pokemon.name} pokemon={pokemon} />
+        ))}
+      </div>
+    </section>
   );
 }

@@ -10,8 +10,8 @@ export default function BattleActions({
 }) {
   if (!attacks || attacks.length === 0) {
     return (
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-gray-200 border-2 border-gray-400 rounded p-3 text-center">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gray-50 rounded-xl shadow-sm p-3 text-center">
           <p className="text-gray-500 text-sm">Sin ataques</p>
         </div>
       </div>
@@ -19,21 +19,21 @@ export default function BattleActions({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-3">
       {attacks.map(attack => (
         <button
           key={attack.id}
           onClick={() => onSelectAttack(attack.id)}
           disabled={disabled}
           className={`
-            bg-white border-2 border-gray-800 rounded-lg p-3 text-left
-            hover:bg-blue-50 hover:border-blue-500
-            active:bg-blue-100
-            transition-all duration-150
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+            bg-white rounded-xl shadow-md hover:shadow-lg p-3 text-left
+            transition-all duration-200
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}
           `}
         >
-          <div className="font-bold text-sm text-gray-900">{attack.name}</div>
+          <div className="font-semibold text-sm text-gray-800">
+            {attack.name}
+          </div>
           <div className="text-xs text-gray-600">Poder: {attack.power}</div>
         </button>
       ))}

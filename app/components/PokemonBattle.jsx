@@ -144,9 +144,9 @@ export default function PokemonBattle({
   // Estado de carga
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600">Iniciando combate...</p>
         </div>
       </div>
@@ -156,13 +156,13 @@ export default function PokemonBattle({
   // Estado de error
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center bg-red-50 border-2 border-red-500 rounded-lg p-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center bg-white rounded-xl shadow-md p-6 max-w-md">
           <p className="text-red-600 font-bold mb-2">Error</p>
-          <p className="text-gray-700">{error}</p>
+          <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={initializeBattle}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
           >
             Reintentar
           </button>
@@ -185,146 +185,150 @@ export default function PokemonBattle({
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-gradient-to-b from-blue-200 to-green-200 min-h-screen p-4">
-      {/* Header con navegación */}
-      <div className="mb-4 flex justify-between items-center">
-        <Link
-          href="/battle"
-          className="inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
-        >
-          ← Volver
-        </Link>
-        {isBattleActive && (
-          <button
-            onClick={handleAbandon}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-8 max-w-6xl mx-auto">
+        {/* Header con navegación */}
+        <div className="mb-4 flex justify-between items-center">
+          <Link
+            href="/battle"
+            className="inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
           >
-            Abandonar
-          </button>
-        )}
-      </div>
-
-      {/* Área de combate */}
-      <div className="bg-white border-4 border-gray-900 rounded-lg p-6 mb-4">
-        {/* Pokémon Oponente */}
-        <div className="flex justify-end items-start mb-8">
-          <div className="text-right mr-4">
-            <BattleHPBar
-              pokemon={opponent.pokemon}
-              currentHP={opponent.currentHP}
-              maxHP={opponent.maxHP}
-              isPlayer={false}
-            />
-          </div>
-          <div
-            className={`relative w-48 h-48 ${
-              isAttacking ? 'animate-bounce' : ''
-            } transition-transform duration-300`}
-          >
-            {opponent.pokemon?.sprites?.front_default && (
-              <Image
-                src={opponent.pokemon.sprites.front_default}
-                alt={opponent.pokemon.name}
-                fill
-                className="object-contain"
-                unoptimized
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Pokémon Jugador */}
-        <div className="flex justify-start items-start">
-          <div
-            className={`relative w-48 h-48 ${
-              isAttacking ? 'animate-pulse' : ''
-            } transition-transform duration-300`}
-          >
-            {player.pokemon?.sprites?.back_default && (
-              <Image
-                src={player.pokemon.sprites.back_default}
-                alt={player.pokemon.name}
-                fill
-                className="object-contain"
-                unoptimized
-              />
-            )}
-            {!player.pokemon?.sprites?.back_default &&
-              player.pokemon?.sprites?.front_default && (
-                <Image
-                  src={player.pokemon.sprites.front_default}
-                  alt={player.pokemon.name}
-                  fill
-                  className="object-contain scale-x-[-1]"
-                  unoptimized
-                />
-              )}
-          </div>
-          <div className="text-left ml-4">
-            <BattleHPBar
-              pokemon={player.pokemon}
-              currentHP={player.currentHP}
-              maxHP={player.maxHP}
-              isPlayer={true}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Mensajes de combate */}
-      <div className="mb-4">
-        <BattleMessages messages={formattedMessages} />
-      </div>
-
-      {/* Acciones de combate */}
-      {isBattleActive && (
-        <div className="bg-white border-4 border-gray-900 rounded-lg p-4">
-          <h3 className="text-lg font-bold mb-3 text-gray-800">
-            ¿Qué debería hacer {player.pokemon?.name}?
-          </h3>
-          <BattleActions
-            attacks={player.attacks}
-            onSelectAttack={handleAttack}
-            disabled={isAttacking}
-          />
-        </div>
-      )}
-
-      {/* Resultado del combate */}
-      {!isBattleActive && (
-        <div
-          className={`bg-white border-4 border-gray-900 rounded-lg p-6 text-center ${
-            status === 'player1_won' ? 'bg-green-50' : 'bg-red-50'
-          }`}
-        >
-          <h2 className="text-2xl font-bold mb-4 text-black">
-            {status === 'player1_won' ? '¡Victoria!' : 'Derrota'}
-          </h2>
-          <p className="text-lg mb-4 text-black">
-            {status === 'player1_won'
-              ? '¡Has ganado el combate!'
-              : 'Has perdido el combate...'}
-          </p>
-          {onBattleEnd && (
+            ← Volver
+          </Link>
+          {isBattleActive && (
             <button
-              onClick={() => onBattleEnd(status)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+              onClick={handleAbandon}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
             >
-              Volver
+              Abandonar
             </button>
           )}
         </div>
-      )}
 
-      {/* Indicador de turno */}
-      {isBattleActive && (
-        <div className="mt-4 text-center text-sm text-gray-600">
-          Turno #{battleState.turnNumber || 0}
-          {isAttacking && (
-            <span className="ml-2 animate-pulse">Procesando...</span>
-          )}
+        {/* Área de combate */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+          {/* Pokémon Oponente */}
+          <div className="flex justify-end items-start mb-8">
+            <div className="text-right mr-4">
+              <BattleHPBar
+                pokemon={opponent.pokemon}
+                currentHP={opponent.currentHP}
+                maxHP={opponent.maxHP}
+                isPlayer={false}
+              />
+            </div>
+            <div
+              className={`relative w-48 h-48 ${
+                isAttacking ? 'animate-bounce' : ''
+              } transition-transform duration-300`}
+            >
+              {opponent.pokemon?.sprites?.front_default && (
+                <Image
+                  src={opponent.pokemon.sprites.front_default}
+                  alt={opponent.pokemon.name}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Pokémon Jugador */}
+          <div className="flex justify-start items-start">
+            <div
+              className={`relative w-48 h-48 ${
+                isAttacking ? 'animate-pulse' : ''
+              } transition-transform duration-300`}
+            >
+              {player.pokemon?.sprites?.back_default && (
+                <Image
+                  src={player.pokemon.sprites.back_default}
+                  alt={player.pokemon.name}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              )}
+              {!player.pokemon?.sprites?.back_default &&
+                player.pokemon?.sprites?.front_default && (
+                  <Image
+                    src={player.pokemon.sprites.front_default}
+                    alt={player.pokemon.name}
+                    fill
+                    className="object-contain scale-x-[-1]"
+                    unoptimized
+                  />
+                )}
+            </div>
+            <div className="text-left ml-4">
+              <BattleHPBar
+                pokemon={player.pokemon}
+                currentHP={player.currentHP}
+                maxHP={player.maxHP}
+                isPlayer={true}
+              />
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Mensajes de combate */}
+        <div className="mb-4">
+          <BattleMessages messages={formattedMessages} />
+        </div>
+
+        {/* Acciones de combate */}
+        {isBattleActive && (
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <h3 className="text-lg font-bold mb-3 text-gray-900">
+              ¿Qué debería hacer {player.pokemon?.name}?
+            </h3>
+            <BattleActions
+              attacks={player.attacks}
+              onSelectAttack={handleAttack}
+              disabled={isAttacking}
+            />
+          </div>
+        )}
+
+        {/* Resultado del combate */}
+        {!isBattleActive && (
+          <div
+            className={`bg-white rounded-xl shadow-md p-6 text-center ${
+              status === 'player1_won'
+                ? 'ring-2 ring-green-500'
+                : 'ring-2 ring-red-500'
+            }`}
+          >
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">
+              {status === 'player1_won' ? '¡Victoria!' : 'Derrota'}
+            </h2>
+            <p className="text-lg mb-4 text-gray-600">
+              {status === 'player1_won'
+                ? '¡Has ganado el combate!'
+                : 'Has perdido el combate...'}
+            </p>
+            {onBattleEnd && (
+              <button
+                onClick={() => onBattleEnd(status)}
+                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+              >
+                Volver
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Indicador de turno */}
+        {isBattleActive && (
+          <div className="mt-4 text-center text-sm text-gray-600">
+            Turno #{battleState.turnNumber || 0}
+            {isAttacking && (
+              <span className="ml-2 animate-pulse">Procesando...</span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
