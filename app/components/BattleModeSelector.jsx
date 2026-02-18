@@ -10,14 +10,14 @@ export default function BattleModeSelector({ onSelect }) {
       <button
         type="button"
         onClick={() => onSelect('ai')}
-        className="px-8 py-4 text-lg font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all"
+        className="px-6 py-3 text-lg font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
       >
         Batalla vs AI
       </button>
       <button
         type="button"
         onClick={() => onSelect('pvp')}
-        className="px-8 py-4 text-lg font-bold rounded-lg bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl transition-all"
+        className="px-6 py-3 text-lg font-semibold rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
       >
         Batalla vs Jugador
       </button>

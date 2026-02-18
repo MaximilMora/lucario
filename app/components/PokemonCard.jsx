@@ -32,12 +32,12 @@ export default function PokemonCard({ pokemon }) {
             e.target.nextSibling.style.display = 'flex';
           }}
         />
-        <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center hidden">
+        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center hidden">
           <span className="text-gray-500 text-sm">Image</span>
         </div>
       </div>
 
-      <h3 className="font-semibold text-gray-800 mb-2 capitalize">
+      <h3 className="font-semibold text-gray-900 mb-2 capitalize">
         {pokemon.name}
       </h3>
 
