@@ -541,10 +541,13 @@ export async function POST(request) {
       const { playerPokemonId, opponentPokemonId, username } = body;
 
       if (!playerPokemonId || !opponentPokemonId) {
-        console.warn('[Battle API] init: missing playerPokemonId or opponentPokemonId', {
-          playerPokemonId: body.playerPokemonId,
-          opponentPokemonId: body.opponentPokemonId,
-        });
+        console.warn(
+          '[Battle API] init: missing playerPokemonId or opponentPokemonId',
+          {
+            playerPokemonId: body.playerPokemonId,
+            opponentPokemonId: body.opponentPokemonId,
+          }
+        );
         return NextResponse.json(
           { error: 'Player and opponent Pokemon IDs are required' },
           { status: 400 }
