@@ -9,16 +9,18 @@ export default [
       '.next/**',
       'node_modules/**',
       'out/**',
-      'build/**',
       'dist/**',
+      'build/**',
       '*.config.js',
       '*.config.mjs',
       'playwright.config.js',
       'vitest.config.js',
+      // Babel parser no soporta TypeScript; middleware.ts se valida con tsc/Next build
+      'middleware.ts',
     ],
   },
   {
-    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    files: ['**/*.js', '**/*.jsx'],
     plugins: {
       'react-hooks': reactHooks,
     },
