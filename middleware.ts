@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher(
   process.env.NEXT_PUBLIC_SKIP_AUTH === 'true'
@@ -6,7 +7,24 @@ const isPublicRoute = createRouteMatcher(
     : []
 );
 
-export default clerkMiddleware(
+// Responder a OPTIONS (preflight CORS) para evitar 400 Bad Request
+function handleOptions(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods':
+          'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+  return null;
+}
+
+const clerkHandler = clerkMiddleware(
   async (auth, req) => {
     if (!isPublicRoute(req)) {
       await auth.protect();
@@ -48,6 +66,12 @@ export default clerkMiddleware(
     },
   }
 );
+
+export default function middleware(req: NextRequest) {
+  const optionsResponse = handleOptions(req);
+  if (optionsResponse) return optionsResponse;
+  return clerkHandler(req);
+}
 
 export const config = {
   matcher: [
