@@ -63,6 +63,7 @@ export default function BattleStarter() {
       setShowBattle(false);
       setPlayerPokemonId(null);
       setOpponentPokemonId(null);
+      setSelectedOpponent(null);
     }, 3000);
   };
 
