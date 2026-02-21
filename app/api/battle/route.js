@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseServer as supabaseClient } from '../../lib/supabaseServerClient';
 
 // ============================================
@@ -496,6 +496,20 @@ async function getAuthUserId() {
   }
 }
 
+async function getAuthUsername() {
+  try {
+    const user = await currentUser();
+    return (
+      user?.username ||
+      user?.firstName ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parsea el body JSON de forma segura
  */
@@ -554,8 +568,9 @@ export async function POST(request) {
         );
       }
 
-      // Obtener datos de los Pokémon desde PokeAPI
-      const [player1Data, player2Data] = await Promise.all([
+      // Obtener datos de los Pokémon y username de Clerk en paralelo
+      const [clerkUsername, player1Data, player2Data] = await Promise.all([
+        clerkUserId ? getAuthUsername() : Promise.resolve(null),
         fetchPokemonData(playerPokemonId),
         fetchPokemonData(opponentPokemonId),
       ]);
@@ -569,7 +584,7 @@ export async function POST(request) {
 
       const player1UserId = clerkUserId || 'guest';
       const player1Username =
-        username || (player1UserId === 'guest' ? 'Guest' : 'Player');
+        clerkUsername || (player1UserId === 'guest' ? 'Guest' : 'Player');
 
       let battleId;
       try {
