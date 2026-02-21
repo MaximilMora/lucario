@@ -2,6 +2,8 @@
 // Note: Using basic config due to Next.js 16.0.9 bug with "next lint" command
 import babelParser from '@babel/eslint-parser';
 import reactHooks from 'eslint-plugin-react-hooks';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
@@ -15,10 +17,39 @@ export default [
       '*.config.mjs',
       'playwright.config.js',
       'vitest.config.js',
-      // Babel parser no soporta TypeScript; middleware.ts se valida con tsc/Next build
-      'middleware.ts',
     ],
   },
+  // TypeScript (.ts, .tsx) — parser y reglas recomendadas
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+        global: 'readonly',
+      },
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  // JavaScript (.js, .jsx) — Babel parser
   {
     files: ['**/*.js', '**/*.jsx'],
     plugins: {
