@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import BattleHPBar from './BattleHPBar';
 import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
+import BattleTurnTimer from './BattleTurnTimer';
 
 /**
  * Componente principal del sistema de combate por turnos
@@ -22,6 +23,7 @@ export default function PokemonBattle({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
   const battleIdRef = useRef(null);
 
   /**
@@ -71,51 +73,66 @@ export default function PokemonBattle({
    * Ejecuta un ataque enviando SOLO el battleId y attackId
    * El servidor calcula todo y devuelve el nuevo estado
    */
-  const handleAttack = async attackId => {
-    if (!battleState || battleState.status !== 'active' || isAttacking) {
-      return;
-    }
-
-    try {
-      setIsAttacking(true);
-
-      // SEGURIDAD: Solo enviamos IDs, no el estado
-      const response = await fetch('/api/battle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'attack',
-          battleId: battleIdRef.current,
-          attackId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al ejecutar el ataque');
+  const handleAttack = useCallback(
+    async attackId => {
+      if (!battleState || battleState.status !== 'active' || isAttacking) {
+        return;
       }
 
-      // Actualizar estado con delay para animación
-      setTimeout(() => {
-        setBattleState(data.battleState);
-        setIsAttacking(false);
+      try {
+        setIsAttacking(true);
 
-        // Si el combate terminó, notificar
-        if (data.battleState.status !== 'active') {
-          if (onBattleEnd) {
-            setTimeout(() => {
-              onBattleEnd(data.battleState.status);
-            }, 2000);
-          }
+        // SEGURIDAD: Solo enviamos IDs, no el estado
+        const response = await fetch('/api/battle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'attack',
+            battleId: battleIdRef.current,
+            attackId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Error al ejecutar el ataque');
         }
-      }, 500);
-    } catch (err) {
-      setError(err.message);
-      setIsAttacking(false);
-      console.error('Error executing attack:', err);
-    }
-  };
+
+        // Actualizar estado con delay para animación
+        setTimeout(() => {
+          setBattleState(data.battleState);
+          setIsAttacking(false);
+          setTimerKey(k => k + 1);
+
+          // Si el combate terminó, notificar
+          if (data.battleState.status !== 'active') {
+            if (onBattleEnd) {
+              setTimeout(() => {
+                onBattleEnd(data.battleState.status);
+              }, 2000);
+            }
+          }
+        }, 500);
+      } catch (err) {
+        setError(err.message);
+        setIsAttacking(false);
+        console.error('Error executing attack:', err);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [battleState, isAttacking, onBattleEnd]
+  );
+
+  /**
+   * Auto-ataque al expirar el temporizador: elige un movimiento aleatorio.
+   */
+  const handleTimerExpire = useCallback(() => {
+    if (!battleState?.player?.attacks?.length || isAttacking) return;
+    const attacks = battleState.player.attacks;
+    const randomAttack = attacks[Math.floor(Math.random() * attacks.length)];
+    handleAttack(randomAttack.id);
+  }, [battleState, isAttacking, handleAttack]);
 
   /**
    * Abandona la batalla actual
@@ -277,9 +294,16 @@ export default function PokemonBattle({
           <BattleMessages messages={formattedMessages} />
         </div>
 
-        {/* Acciones de combate */}
+        {/* Timer y acciones de combate */}
         {isBattleActive && (
           <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="mb-3">
+              <BattleTurnTimer
+                key={timerKey}
+                active={!isAttacking}
+                onExpire={handleTimerExpire}
+              />
+            </div>
             <h3 className="text-lg font-bold mb-3 text-gray-900">
               ¿Qué debería hacer {player.pokemon?.name}?
             </h3>

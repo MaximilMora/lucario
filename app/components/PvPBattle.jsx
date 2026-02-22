@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
@@ -8,6 +8,7 @@ import { getSupabase } from '../lib/supabaseClient';
 import BattleHPBar from './BattleHPBar';
 import BattleMessages from './BattleMessages';
 import BattleActions from './BattleActions';
+import BattleTurnTimer from './BattleTurnTimer';
 
 /**
  * Batalla PvP en tiempo real.
@@ -19,6 +20,7 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
   const channelRef = useRef(null);
 
   useEffect(() => {
@@ -130,27 +132,43 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
           )
       : null;
 
-  const handleAttack = async attackId => {
-    if (!isMyTurn || isAttacking || battle?.status !== 'active') return;
-    try {
-      setIsAttacking(true);
-      const res = await fetch('/api/pvp-battle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'attack', battleId, attackId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al atacar');
-      if (data.status && data.status !== 'active') {
-        setBattle(prev => (prev ? { ...prev, status: data.status } : null));
-        if (onBattleEnd) setTimeout(() => onBattleEnd(data.status), 2000);
+  const handleAttack = useCallback(
+    async attackId => {
+      if (!isMyTurn || isAttacking || battle?.status !== 'active') return;
+      try {
+        setIsAttacking(true);
+        const res = await fetch('/api/pvp-battle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'attack', battleId, attackId }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al atacar');
+        setTimerKey(k => k + 1);
+        if (data.status && data.status !== 'active') {
+          setBattle(prev => (prev ? { ...prev, status: data.status } : null));
+          if (onBattleEnd) setTimeout(() => onBattleEnd(data.status), 2000);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsAttacking(false);
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsAttacking(false);
-    }
-  };
+    },
+    [isMyTurn, isAttacking, battle, battleId, onBattleEnd]
+  );
+
+  const handleTimerExpire = useCallback(() => {
+    if (!isMyTurn || isAttacking || !battle || !mySide) return;
+    const pokemonData =
+      mySide === 'player1'
+        ? battle.player1_pokemon_data
+        : battle.player2_pokemon_data;
+    const attacks = pokemonData?.attacks;
+    if (!attacks?.length) return;
+    const randomAttack = attacks[Math.floor(Math.random() * attacks.length)];
+    handleAttack(randomAttack.id);
+  }, [isMyTurn, isAttacking, battle, mySide, handleAttack]);
 
   const handleForfeit = async () => {
     try {
@@ -292,6 +310,15 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
 
         {isBattleActive && (
           <div className="bg-white rounded-xl shadow-md p-4">
+            {isMyTurn && (
+              <div className="mb-3">
+                <BattleTurnTimer
+                  key={timerKey}
+                  active={isMyTurn && !isAttacking}
+                  onExpire={handleTimerExpire}
+                />
+              </div>
+            )}
             <h3 className="text-lg font-bold mb-3 text-gray-900">
               {isMyTurn
                 ? `¿Qué debería hacer ${player.pokemon?.name}?`

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseServer as supabaseClient } from '../../lib/supabaseServerClient';
+import { fetchPokemonMoves } from '../../utils/pokemonMoves';
+import {
+  calculateDamage,
+  getEffectivenessMessage,
+} from '../../utils/battleCalculations';
 
 // ============================================
 // CONFIGURACIÓN
@@ -86,14 +91,6 @@ function generatePokemonAttacks(pokemonData) {
 // HELPERS: Cálculos de Batalla
 // ============================================
 
-/**
- * Calcula el daño de un ataque (EN EL SERVIDOR - fuente de verdad)
- */
-function calculateDamage(attackStat, defenseStat, movePower) {
-  const baseDamage = (attackStat / defenseStat) * movePower;
-  const variation = 0.8 + Math.random() * 0.4; // 80-120%
-  return Math.max(1, Math.floor(baseDamage * variation));
-}
 
 // ============================================
 // HELPERS: Base de Datos
@@ -158,6 +155,11 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
   const player1Stats = extractPokemonStats(player1Data);
   const player2Stats = extractPokemonStats(player2Data);
 
+  const [player1Attacks, player2Attacks] = await Promise.all([
+    fetchPokemonMoves(player1Data),
+    fetchPokemonMoves(player2Data),
+  ]);
+
   const stateData = {
     battle_id: battleId,
     // Jugador 1
@@ -169,7 +171,7 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
     player1_defense: player1Stats.defense,
     player1_speed: player1Stats.speed,
     player1_types: player1Data.types?.map(t => t.type.name) || [],
-    player1_attacks: generatePokemonAttacks(player1Data),
+    player1_attacks: player1Attacks,
     player1_sprite_front: player1Data.sprites?.front_default,
     player1_sprite_back: player1Data.sprites?.back_default,
     // Jugador 2 (AI)
@@ -181,7 +183,7 @@ async function createBattleState({ battleId, player1Data, player2Data }) {
     player2_defense: player2Stats.defense,
     player2_speed: player2Stats.speed,
     player2_types: player2Data.types?.map(t => t.type.name) || [],
-    player2_attacks: generatePokemonAttacks(player2Data),
+    player2_attacks: player2Attacks,
     player2_sprite_front: player2Data.sprites?.front_default,
     player2_sprite_back: player2Data.sprites?.back_default,
     // Estado inicial
@@ -602,28 +604,34 @@ export async function POST(request) {
           status: 'active',
           started_at: new Date().toISOString(),
         });
+        const [fb1Attacks, fb2Attacks] = await Promise.all([
+          fetchPokemonMoves(player1Data),
+          fetchPokemonMoves(player2Data),
+        ]);
+        const p1Stats = extractPokemonStats(player1Data);
+        const p2Stats = extractPokemonStats(player2Data);
         const stateData = {
           battle_id: battleId,
           player1_pokemon_id: player1Data.id,
           player1_pokemon_name: player1Data.name,
-          player1_current_hp: extractPokemonStats(player1Data).hp,
-          player1_max_hp: extractPokemonStats(player1Data).hp,
-          player1_attack: extractPokemonStats(player1Data).attack,
-          player1_defense: extractPokemonStats(player1Data).defense,
-          player1_speed: extractPokemonStats(player1Data).speed,
+          player1_current_hp: p1Stats.hp,
+          player1_max_hp: p1Stats.hp,
+          player1_attack: p1Stats.attack,
+          player1_defense: p1Stats.defense,
+          player1_speed: p1Stats.speed,
           player1_types: player1Data.types?.map(t => t.type.name) || [],
-          player1_attacks: generatePokemonAttacks(player1Data),
+          player1_attacks: fb1Attacks,
           player1_sprite_front: player1Data.sprites?.front_default,
           player1_sprite_back: player1Data.sprites?.back_default,
           player2_pokemon_id: player2Data.id,
           player2_pokemon_name: player2Data.name,
-          player2_current_hp: extractPokemonStats(player2Data).hp,
-          player2_max_hp: extractPokemonStats(player2Data).hp,
-          player2_attack: extractPokemonStats(player2Data).attack,
-          player2_defense: extractPokemonStats(player2Data).defense,
-          player2_speed: extractPokemonStats(player2Data).speed,
+          player2_current_hp: p2Stats.hp,
+          player2_max_hp: p2Stats.hp,
+          player2_attack: p2Stats.attack,
+          player2_defense: p2Stats.defense,
+          player2_speed: p2Stats.speed,
           player2_types: player2Data.types?.map(t => t.type.name) || [],
-          player2_attacks: generatePokemonAttacks(player2Data),
+          player2_attacks: fb2Attacks,
           player2_sprite_front: player2Data.sprites?.front_default,
           player2_sprite_back: player2Data.sprites?.back_default,
           current_turn: 'player1',
@@ -725,10 +733,15 @@ export async function POST(request) {
       const nowIso = new Date().toISOString();
 
       // ---- TURNO DEL JUGADOR ----
-      const player1Damage = calculateDamage(
+      const {
+        damage: player1Damage,
+        effectiveness: eff1,
+      } = calculateDamage(
         state.player1_attack,
         state.player2_defense,
-        selectedAttack.power
+        selectedAttack.power,
+        selectedAttack.type,
+        state.player2_types || []
       );
 
       const player2HPBefore = newPlayer2HP;
@@ -739,6 +752,8 @@ export async function POST(request) {
         text: `${state.player1_pokemon_name} usó ${selectedAttack.name}!`,
         type: 'attack',
       });
+      const effMsg1 = getEffectivenessMessage(eff1);
+      if (effMsg1) messages.push(effMsg1);
       messages.push({
         text: `${state.player2_pokemon_name} recibió ${player1Damage} de daño.`,
         type: 'damage',
@@ -755,7 +770,7 @@ export async function POST(request) {
         attack_name: selectedAttack.name,
         attack_power: selectedAttack.power,
         damage_dealt: player1Damage,
-        effectiveness: 'normal',
+        effectiveness: String(eff1),
         target_hp_before: player2HPBefore,
         target_hp_after: newPlayer2HP,
         attacker_hp_after: newPlayer1HP,
@@ -830,10 +845,15 @@ export async function POST(request) {
 
       const aiAttack =
         opponentAttacks[Math.floor(Math.random() * opponentAttacks.length)];
-      const player2Damage = calculateDamage(
+      const {
+        damage: player2Damage,
+        effectiveness: eff2,
+      } = calculateDamage(
         state.player2_attack,
         state.player1_defense,
-        Number(aiAttack?.power) || 10
+        Number(aiAttack?.power) || 10,
+        aiAttack?.type,
+        state.player1_types || []
       );
 
       const player1HPBefore = newPlayer1HP;
@@ -844,6 +864,8 @@ export async function POST(request) {
         text: `${state.player2_pokemon_name} usó ${aiAttack.name}!`,
         type: 'attack',
       });
+      const effMsg2 = getEffectivenessMessage(eff2);
+      if (effMsg2) messages.push(effMsg2);
       messages.push({
         text: `${state.player1_pokemon_name} recibió ${player2Damage} de daño.`,
         type: 'damage',
@@ -860,7 +882,7 @@ export async function POST(request) {
         attack_name: aiAttack.name,
         attack_power: aiAttack.power,
         damage_dealt: player2Damage,
-        effectiveness: 'normal',
+        effectiveness: String(eff2),
         target_hp_before: player1HPBefore,
         target_hp_after: newPlayer1HP,
         attacker_hp_after: newPlayer2HP,
