@@ -41,9 +41,7 @@ export async function fetchPokemonMoves(pokemonData) {
 
   const levelUpNames = allMoves
     .filter(m =>
-      m.version_group_details.some(
-        d => d.move_learn_method.name === 'level-up'
-      )
+      m.version_group_details.some(d => d.move_learn_method.name === 'level-up')
     )
     .map(m => m.move.name);
 

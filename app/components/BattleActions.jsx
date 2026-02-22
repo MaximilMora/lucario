@@ -42,8 +42,7 @@ export default function BattleActions({
   return (
     <div className="grid grid-cols-2 gap-3">
       {attacks.map(attack => {
-        const typeClass =
-          TYPE_COLORS[attack.type] || 'bg-gray-400 text-white';
+        const typeClass = TYPE_COLORS[attack.type] || 'bg-gray-400 text-white';
         return (
           <button
             key={attack.id}

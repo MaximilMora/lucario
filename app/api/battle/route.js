@@ -91,7 +91,6 @@ function generatePokemonAttacks(pokemonData) {
 // HELPERS: Cálculos de Batalla
 // ============================================
 
-
 // ============================================
 // HELPERS: Base de Datos
 // ============================================
@@ -733,10 +732,7 @@ export async function POST(request) {
       const nowIso = new Date().toISOString();
 
       // ---- TURNO DEL JUGADOR ----
-      const {
-        damage: player1Damage,
-        effectiveness: eff1,
-      } = calculateDamage(
+      const { damage: player1Damage, effectiveness: eff1 } = calculateDamage(
         state.player1_attack,
         state.player2_defense,
         selectedAttack.power,
@@ -845,10 +841,7 @@ export async function POST(request) {
 
       const aiAttack =
         opponentAttacks[Math.floor(Math.random() * opponentAttacks.length)];
-      const {
-        damage: player2Damage,
-        effectiveness: eff2,
-      } = calculateDamage(
+      const { damage: player2Damage, effectiveness: eff2 } = calculateDamage(
         state.player2_attack,
         state.player1_defense,
         Number(aiAttack?.power) || 10,

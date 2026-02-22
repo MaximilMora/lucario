@@ -1,7 +1,4 @@
-import {
-  getTypeEffectiveness,
-  getEffectivenessMessage,
-} from './typeChart';
+import { getTypeEffectiveness, getEffectivenessMessage } from './typeChart';
 
 /**
  * Calcula el daño de un ataque considerando efectividad de tipos.

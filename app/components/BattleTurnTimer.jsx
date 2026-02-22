@@ -33,7 +33,11 @@ export default function BattleTurnTimer({ active, onExpire }) {
 
   const percentage = (timeLeft / TURN_DURATION) * 100;
   const isUrgent = timeLeft <= 10;
-  const barColor = isUrgent ? 'bg-red-500' : timeLeft <= 20 ? 'bg-yellow-400' : 'bg-green-500';
+  const barColor = isUrgent
+    ? 'bg-red-500'
+    : timeLeft <= 20
+      ? 'bg-yellow-400'
+      : 'bg-green-500';
   const textColor = isUrgent ? 'text-red-600' : 'text-gray-700';
 
   if (!active) return null;
