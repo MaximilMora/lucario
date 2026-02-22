@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseServer as supabase } from '../../lib/supabaseServerClient';
-
-function calculateDamage(attackStat, defenseStat, movePower) {
-  const baseDamage = (attackStat / defenseStat) * movePower;
-  const variation = 0.8 + Math.random() * 0.4;
-  return Math.max(1, Math.floor(baseDamage * variation));
-}
+import {
+  calculateDamage,
+  getEffectivenessMessage,
+} from '../../utils/battleCalculations';
 
 /** Obtiene la batalla por id; debe ser PvP y estar activa para atacar. */
 async function getPvPBattle(battleId) {
@@ -175,11 +173,17 @@ export async function POST(request) {
 
       const attackerAttack = attackerData.attack ?? 50;
       const defenderDefense = defenderData.defense ?? 50;
-      const damage = calculateDamage(
+      const defenderTypes = Array.isArray(defenderData.types)
+        ? defenderData.types
+        : [];
+      const { damage, effectiveness } = calculateDamage(
         attackerAttack,
         defenderDefense,
-        selectedAttack.power ?? 50
+        selectedAttack.power ?? 50,
+        selectedAttack.type,
+        defenderTypes
       );
+      const effMsg = getEffectivenessMessage(effectiveness);
 
       let p1Hp = battle.player1_current_hp ?? 0;
       let p2Hp = battle.player2_current_hp ?? 0;
@@ -207,6 +211,8 @@ export async function POST(request) {
         turn: currentTurn,
         attackId: selectedAttack.id,
         attackName: selectedAttack.name,
+        effectiveness: String(effectiveness),
+        effectivenessMessage: effMsg?.text ?? null,
         damage,
         targetHpAfter: currentTurn === 'player1' ? p2Hp : p1Hp,
       };

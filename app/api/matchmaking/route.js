@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseServer as supabase } from '../../lib/supabaseServerClient';
+import { fetchPokemonMoves } from '../../utils/pokemonMoves';
 
 // --------------------------------------------
 // HELPERS: PokeAPI (mismo criterio que /api/battle)
@@ -32,25 +33,15 @@ function extractPokemonStats(pokemonData) {
   };
 }
 
-function generatePokemonAttacks(pokemonData) {
-  const types = pokemonData.types?.map(t => t.type.name) || ['normal'];
-  const primaryType = types[0];
-  return [
-    { id: 1, name: 'Ataque Rápido', power: 30, type: primaryType },
-    { id: 2, name: 'Ataque Normal', power: 50, type: primaryType },
-    { id: 3, name: 'Ataque Fuerte', power: 70, type: primaryType },
-    { id: 4, name: 'Ataque Especial', power: 90, type: primaryType },
-  ];
-}
-
 /** Construye el JSONB para player1_pokemon_data / player2_pokemon_data en battles */
-function buildPokemonData(pokemonData) {
+async function buildPokemonData(pokemonData) {
   const stats = extractPokemonStats(pokemonData);
+  const attacks = await fetchPokemonMoves(pokemonData);
   return {
     id: pokemonData.id,
     name: pokemonData.name,
     types: pokemonData.types?.map(t => t.type.name) || [],
-    attacks: generatePokemonAttacks(pokemonData),
+    attacks,
     sprite_front: pokemonData.sprites?.front_default,
     sprite_back: pokemonData.sprites?.back_default,
     hp: stats.hp,
@@ -180,8 +171,10 @@ export async function POST(request) {
           );
         }
 
-        const player1Data = buildPokemonData(opponentPokemonData);
-        const player2Data = buildPokemonData(pokemonData);
+        const [player1Data, player2Data] = await Promise.all([
+          buildPokemonData(opponentPokemonData),
+          buildPokemonData(pokemonData),
+        ]);
         const p1Hp = player1Data.hp;
         const p2Hp = player2Data.hp;
 
