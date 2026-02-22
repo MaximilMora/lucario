@@ -497,6 +497,20 @@ async function getAuthUserId() {
   }
 }
 
+async function getAuthUsername() {
+  try {
+    const user = await currentUser();
+    return (
+      user?.username ||
+      user?.firstName ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parsea el body JSON de forma segura
  */
@@ -572,7 +586,7 @@ export async function POST(request) {
         );
       }
 
-      // Obtener datos de los Pokémon y el username en paralelo
+      // Obtener datos de los Pokémon y username de Clerk en paralelo
       const [clerkUsername, player1Data, player2Data] = await Promise.all([
         clerkUserId ? getAuthUsername() : Promise.resolve(null),
         fetchPokemonData(playerPokemonId),
