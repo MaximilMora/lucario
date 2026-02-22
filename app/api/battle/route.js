@@ -497,20 +497,6 @@ async function getAuthUserId() {
   }
 }
 
-async function getAuthUsername() {
-  try {
-    const user = await currentUser();
-    return (
-      user?.username ||
-      user?.firstName ||
-      user?.emailAddresses?.[0]?.emailAddress ||
-      null
-    );
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Parsea el body JSON de forma segura
  */
