@@ -34,12 +34,13 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
     }
 
     const fetchBattle = async () => {
-      const { data, err } = await supabase
+      const { data, error: fetchErr } = await supabase
         .from('battles')
         .select('*')
         .eq('id', battleId)
         .single();
-      if (err || !data) {
+      if (fetchErr || !data) {
+        console.error('PvPBattle fetch error:', fetchErr);
         setError('Batalla no encontrada');
         setLoading(false);
         return;

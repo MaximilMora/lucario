@@ -53,6 +53,7 @@ const clerkHandler = clerkMiddleware(
           'https://api.stripe.com',
           'https://relaxing-malamute-31.clerk.accounts.dev',
           'https://*.clerk.accounts.dev',
+          'https://*.supabase.co',
         ],
         // Permitir iframe de Vercel Live en previews
         'frame-src': ['self', 'https://vercel.live'],
