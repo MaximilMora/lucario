@@ -211,6 +211,7 @@ export async function POST(request) {
 
         const battleId = newBattle.id;
 
+        // Update the waiting opponent's row to matched
         await supabase
           .from('matchmaking_queue')
           .update({
@@ -219,6 +220,17 @@ export async function POST(request) {
             matched_with_user_id: userId,
           })
           .eq('id', waitingOpponent.id);
+
+        // Also insert a matched row for the joining player so both sides are consistent
+        await supabase.from('matchmaking_queue').insert({
+          user_id: userId,
+          username,
+          pokemon_id: pkmId,
+          pokemon_name: pkmName,
+          status: 'matched',
+          battle_id: battleId,
+          matched_with_user_id: waitingOpponent.user_id,
+        });
 
         return NextResponse.json({
           success: true,
