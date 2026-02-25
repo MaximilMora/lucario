@@ -126,18 +126,34 @@ export async function POST(request) {
 
       if (existing) {
         if (existing.status === 'matched' && existing.battle_id) {
+          // Check if the battle is still active; if not, clean up the stale row
+          const { data: linkedBattle } = await supabase
+            .from('battles')
+            .select('status')
+            .eq('id', existing.battle_id)
+            .maybeSingle();
+
+          if (linkedBattle && linkedBattle.status === 'active') {
+            return NextResponse.json({
+              success: true,
+              matched: true,
+              battleId: existing.battle_id,
+            });
+          }
+
+          // Battle is finished or missing — delete stale queue row and continue
+          await supabase
+            .from('matchmaking_queue')
+            .delete()
+            .eq('id', existing.id);
+        } else {
           return NextResponse.json({
             success: true,
-            matched: true,
-            battleId: existing.battle_id,
+            inQueue: true,
+            status: existing.status,
+            message: 'Already in queue',
           });
         }
-        return NextResponse.json({
-          success: true,
-          inQueue: true,
-          status: existing.status,
-          message: 'Already in queue',
-        });
       }
 
       const nameForApi = pokemonName || String(pokemonId);
