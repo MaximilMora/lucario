@@ -19,16 +19,16 @@ Aplicación web full-stack de combates Pokémon por turnos con multijugador en t
 
 ## Stack tecnológico
 
-| Categoría | Tecnología |
-|---|---|
-| Frontend | React 19, Next.js 15, Tailwind CSS 4 |
-| Backend | Next.js API Routes (serverless) |
-| Base de datos | Supabase (PostgreSQL + Realtime) |
-| Autenticación | Clerk |
-| IA | Google Gemini (gemini-2.5-flash) |
-| Testing | Vitest (unit), Playwright (e2e) |
-| CI/CD | GitHub Actions |
-| Deploy | Vercel |
+| Categoría     | Tecnología                           |
+| ------------- | ------------------------------------ |
+| Frontend      | React 19, Next.js 15, Tailwind CSS 4 |
+| Backend       | Next.js API Routes (serverless)      |
+| Base de datos | Supabase (PostgreSQL + Realtime)     |
+| Autenticación | Clerk                                |
+| IA            | Google Gemini (gemini-2.5-flash)     |
+| Testing       | Vitest (unit), Playwright (e2e)      |
+| CI/CD         | GitHub Actions                       |
+| Deploy        | Vercel                               |
 
 ---
 
