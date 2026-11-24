@@ -196,10 +196,7 @@ export default function PokemonBattle({
   const { player, opponent, status } = battleState;
   const isBattleActive = status === 'active';
 
-  // Convertir mensajes al formato esperado por BattleMessages
-  const formattedMessages = (battleState.messages || []).map(msg =>
-    typeof msg === 'string' ? msg : msg.text
-  );
+  const formattedMessages = battleState.messages || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
