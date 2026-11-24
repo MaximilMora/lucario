@@ -187,9 +187,26 @@ export default function PvPBattle({ battleId, onBattleEnd }) {
   const lastAction = battle?.last_action;
   const messages = [];
   if (lastAction?.type === 'attack') {
-    messages.push(
-      `${lastAction.attackName || 'Ataque'} - ${lastAction.damage ?? 0} de daño`
-    );
+    messages.push({
+      text: `${lastAction.attackName || 'Ataque'}`,
+      type: 'attack',
+    });
+    if (lastAction.effectivenessMessage) {
+      const eff = parseFloat(lastAction.effectiveness);
+      messages.push({
+        text: lastAction.effectivenessMessage,
+        type:
+          eff === 0
+            ? 'immune'
+            : eff >= 2
+              ? 'supereffective'
+              : 'notveryeffective',
+      });
+    }
+    messages.push({
+      text: `Causó ${lastAction.damage ?? 0} de daño.`,
+      type: 'damage',
+    });
   }
 
   if (loading) {

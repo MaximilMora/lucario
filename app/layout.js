@@ -25,17 +25,18 @@ export const metadata = {
   },
 };
 
+const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+
 export default function RootLayout({ children }) {
-  return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-          <PokechatAi />
-        </body>
-      </html>
-    </ClerkProvider>
+  const body = (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+        <PokechatAi />
+      </body>
+    </html>
   );
+  return skipAuth ? body : <ClerkProvider>{body}</ClerkProvider>;
 }
